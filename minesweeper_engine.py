@@ -90,35 +90,28 @@ class MinesweeperGame:
 
 
 # run the clingo file to get the next best move
-def run_clingo(asp_file):
-    cmd = ["clingo", asp_file]
-    output = subprocess.check_output(cmd)
-    return output
 
 
 # Start the game
 game = MinesweeperGame(10, 10, 10)
 game_over = False
 
-# Solve the ASP code in the file "my_asp_code.lp"
-# cmd_output = run_clingo("minesweeper_player.lp")
 game_board_str = ""
-game_board_str.join(map(str, game.game_board))
-# Print the output of clingo
-# print(cmd_output.decode())
-asp_file = "minesweeper_player.lp"
+game_board_str = game_board_str.join(map(str, game.game_board))
+
+game_asp_file = "game_board_data.lp"
+player_asp_file = "minesweeper_player.lp"
+
+# write the game board to a file to be opened by the clingo
+with open('game_board_data.lp', 'w') as file:
+    file.write("board_size({0}, {1}).".format(game.width, game.height))
+    # file.write(game_board_str)
 
 # Create a subprocess object to run the ASP code
-p = subprocess.Popen(["clingo", asp_file, game_board_str], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+p = subprocess.Popen(["clingo", player_asp_file, game_asp_file], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
 
-# Send the game board to the ASP code
-p.stdin.write(game_board_str.encode("utf-8"))
-p.stdin.close()
-
-# Receive the output from the ASP code
+# Receive the output from the ASP code and wait for the subprocess to finish
 asp_response = p.stdout.read().decode("utf-8")
-
-# Wait for the subprocess to finish
 p.wait()
 
 # get move from ASP
