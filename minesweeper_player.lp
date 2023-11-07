@@ -28,7 +28,7 @@ cell(X,Y) :- num_x(X), num_y(Y).
 % Number of cells for x (horizontal) and y (vertical)
 num_x(1..7).
 num_y(1..7).
-range(X) :- number(X), X >= 0, X <= 8.
+range(0..8).
 
 % ==============================================================
 % Game Board Facts: what is known about the state of the game
@@ -71,8 +71,9 @@ danger_level(6, 5, 2).
 %%%%%
 % Not working
 %%%%%
-known_mine_count(X, Y, M) :- cell(X, Y), range(N), range(M),
-					#count { X1, Y1 : -safe(X1, Y1), in_region(X1, Y1, X, Y) } N.
+known_mine_count(X, Y, M) :- cell(X, Y),
+					range(M),
+					M = #count { X1, Y1 : -safe(X1, Y1), in_region(X1, Y1, X, Y) }.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % undiscovered_count(X, Y, U) 
@@ -80,8 +81,9 @@ known_mine_count(X, Y, M) :- cell(X, Y), range(N), range(M),
 %%%%%
 % Not working
 %%%%%
-undiscovered_count(X, Y, U) :- cell(X, Y), range(N), range(U),
-					#count { X1, Y1 : -discovered(X1, Y1), in_region(X1, Y1, X, Y) } N.
+undiscovered_count(X, Y, U) :- cell(X, Y),
+					range(U),
+					U = #count { X1, Y1 : -discovered(X1, Y1), in_region(X1, Y1, X, Y) }.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % safe means that a cell is not be a mine...
@@ -94,7 +96,7 @@ is_complete :- not -discovered(X, Y), cell(X, Y).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % to_click means the program can safely click on the cell to advance the game
-to_click(X, Y) :- cell(X, Y).
+% to_click(X, Y) :- cell(X, Y).
 
 
 % ==============================================================
@@ -263,10 +265,10 @@ discovered(X, Y) :- danger_level(X, Y, D).
 
 #show danger_level/3.
 % #show discovered/2.
-#show -discovered/2.
+% #show -discovered/2.
 
 % #show in_region/4.
-#show -safe/2.
+% #show -safe/2.
 
 #show undiscovered_count/3.
 #show known_mine_count/3.
