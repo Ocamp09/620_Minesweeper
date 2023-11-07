@@ -3,6 +3,20 @@ creator(karissa).
 creator(blake).
 creator(max).
 
+% ==============================================================
+% Axioms
+% ==============================================================
+% Fluent?
+% danger_level(X, Y, D) :- 
+% X is x coordinate of cell, 
+% Y is y coordinate of cell
+% D is danger level of cell
+danger_level(X, Y, D) :- num_x(X), num_y(Y), danger(D).
+
+% safe means that the agent can "click" on the cell and it will not be a mine...
+safe(X, Y) :- num_x(X), num_y(Y).
+
+
 % ===================================================================
 % --------------------------------------------------------------
 % Facts: to be imported by a Python written file...
@@ -17,12 +31,35 @@ creator(max).
 num_x(1..7).
 num_y(1..7).
 
+% Danger level
+danger(0..8).
+
+% Generates the cells for each coordinate specified above
 cell(X,Y) :- num_x(X), num_y(Y).
 
 % ==============================================================
 % Game Board Facts: what is known about the state of the game
 % ==============================================================
 
+% What if the python program never specifies whether a cell is uncovered and only specifies whether the danger level is less than 9?  Covered cells can have danger level 9?  -1?
+
+
+
+danger_level(3, 3, 2).
+danger_level(3, 4, 2).
+danger_level(3, 5, 4).
+danger_level(4, 2, 1).
+danger_level(4, 3, 1).
+danger_level(4, 4, 0).
+danger_level(4, 5, 1).
+danger_level(5, 2, 1).
+danger_level(5, 3, 0).
+danger_level(5, 4, 0).
+danger_level(5, 5, 2).
+danger_level(6, 2, 1).
+danger_level(6, 3, 2).
+danger_level(6, 4, 1).
+danger_level(6, 5, 2).
 
 
 % ==============================================================
@@ -43,6 +80,30 @@ diag_neighbor(cell(C1X, C1Y), cell(C2X, C2Y)) :- C1X = C2X + 1,	C1Y = C2Y + 1.
 diag_neighbor(cell(C1X, C1Y), cell(C2X, C2Y)) :- C1X = C2X + 1,	C1Y = C2Y - 1.
 diag_neighbor(cell(C1X, C1Y), cell(C2X, C2Y)) :- C1X = C2X - 1,	C1Y = C2Y + 1.
 diag_neighbor(cell(C1X, C1Y), cell(C2X, C2Y)) :- C1X = C2X - 1,	C1Y = C2Y - 1.
+
+
+
+% ==============================================================
+% Dynamic Causal Laws:
+% ==============================================================
+
+% If we uncover a cell, the danger_level becomes known...
+
+
+% ==============================================================
+% State Constraints:
+% ==============================================================
+
+% If we know the danger_level of a cell, it must be uncovered...
+
+% If count flags in region of a cell equals the danger level of that cell, all remaining cells are safe...
+
+% ==============================================================
+% Executability Conditions:
+% ==============================================================
+
+% ?????
+
 
 
 % ==============================================================
@@ -69,3 +130,9 @@ diag_neighbor(cell(C1X, C1Y), cell(C2X, C2Y)) :- C1X = C2X - 1,	C1Y = C2Y - 1.
 
 
 
+% If there is a cell with danger level 1 and only one undiscovered cell in region, with flag count in region = 0, then place flag in that undiscovered cell.
+
+Moves to make are essentially prioritized as follows:
+1) Click on a known "safe" cell -- as determined by logic rules...
+2) Place a flag over a known mine
+3) Gamble...
