@@ -167,6 +167,9 @@ in_region(X1, Y1, X2, Y2) :- adj_neighbor(X1, Y1, X2, Y2).
 % If the danger_level of a cell is known, it must be discovered...
 discovered(X, Y) :- danger_level(X, Y, D).
 
+% If a cell is not safe, it must be discovered...
+discovered(X, Y) :- -safe(X, Y).
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % A given cell can only have one danger level
 :- danger_level(X, Y, D2), danger_level(X, Y, D1), 
@@ -182,36 +185,30 @@ discovered(X, Y) :- danger_level(X, Y, D).
 % If count -safe in region of a cell equals the danger level of that cell, all remaining cells are safe...
 % safe(X1, Y1) :- in_region(X1, Y1, X2, Y2), 
 				% danger_level(X2, Y2, D),
-				% #count { -safe(X3, Y3) } S,
+				% S = #count { X3, Y3 : -safe(X3, Y3), in_region(X3, Y3, X2, Y2) },
 				% S == D,
 				% X3 != X1, X3 != X2,
 				% Y3 != Y1, Y3 != Y2,
 				% cell(X3, Y3).
 
+% safe(X2, Y2) :- danger_level(X1, Y1, D),
+				% known_mine_count(X1, Y1, M),
+				% in_region(X2, Y2, X1, Y1),
+				% M = D.
+
+% -safe(3, 2).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%  Unfinished
 %%%%%%%%%%%%%%%%%%
 % If there is a diag_neighbor cell with a danger level not satisfied by all surrounding cells, and count undiscovered cells is not sufficient wiggle room, then cell is not safe
 
-% -safe(X1, Y1) :- diag_neighbor(X1, Y1, X2, Y2),
-				% danger_level(X2, Y2, D),
-				% known_mine_count(X2, Y2, M),
-				% M < D,
-				% undiscovered_count(X2, Y2, U),
-				% U <= 1.
+% -safe(X2, Y2) :- in_region(X2, Y2, X1, Y1),
+					% danger_level(X1, Y1, D),
+					% known_mine_count(X1, Y1, M),
+					% undiscovered_count(X1, Y1, U),
+					% D - M = U.
 
-% -safe(X1, Y1) :- in_region(X1, Y1, X2, Y2), 
-				% -discovered(X1, Y1),
-				% danger_level(X2, Y2, D),
-				% #count { -safe(X, Y) } S,
-				% S < D, danger(S), 
-				% #count { -discovered(X, Y) } K,
-				% K < 2, danger(K),
-				% X3 != X1, X3 != X2,
-				% Y3 != Y1, Y3 != Y2,
-				% cell(X3, Y3).
-				% cell(X, Y).
 
 % ==============================================================
 % Executability Conditions:
@@ -269,6 +266,7 @@ discovered(X, Y) :- danger_level(X, Y, D).
 
 % #show in_region/4.
 % #show -safe/2.
+#show safe/2.
 
 #show undiscovered_count/3.
 #show known_mine_count/3.
