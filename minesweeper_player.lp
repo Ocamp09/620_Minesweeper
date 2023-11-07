@@ -3,31 +3,6 @@ creator(karissa).
 creator(blake).
 creator(max).
 
-% ==============================================================
-% Axioms
-% ==============================================================
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% danger_level(X, Y, D) :- 
-% X is x coordinate of cell, 
-% Y is y coordinate of cell
-% D is danger level of cell
-% danger_level(X, Y, D) :- num_x(X), num_y(Y), danger(D).
-% ^If we include planning module, will need to define as fluent...
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% safe means that a cell is not be a mine...
-% In contrast, -safe will be used to indicate a mine cell
-% safe(X, Y) :- cell(X, Y).
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% When there are no unsafe cells that are not discovered, the game is complete
-is_complete :- not -discovered(X, Y), cell(X, Y).
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% to_click means the program can safely click on the cell to advance the game
-to_click(X, Y) :- cell(X, Y).
-
 % ===================================================================
 % --------------------------------------------------------------
 % Static Facts: Always true for the game of Minesweeper
@@ -53,6 +28,7 @@ cell(X,Y) :- num_x(X), num_y(Y).
 % Number of cells for x (horizontal) and y (vertical)
 num_x(1..7).
 num_y(1..7).
+range(X) :- number(X), X >= 0, X <= 8.
 
 % ==============================================================
 % Game Board Facts: what is known about the state of the game
@@ -75,6 +51,51 @@ danger_level(6, 4, 1).
 danger_level(6, 5, 2).
 
 % The ASP program can just re-evaluate which cells are safe and -safe each time...
+
+
+% ==============================================================
+% Axioms
+% ==============================================================
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% danger_level(X, Y, D) :- 
+% X is x coordinate of cell, 
+% Y is y coordinate of cell
+% D is danger level of cell
+% danger_level(X, Y, D) :- num_x(X), num_y(Y), danger(D).
+% ^If we include planning module, will need to define as fluent...
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% known_mine_count(X, Y, M) 
+% the number of known mines in the region around a given cell
+%%%%%
+% Not working
+%%%%%
+known_mine_count(X, Y, M) :- cell(X, Y), range(N), range(M),
+					#count { X1, Y1 : -safe(X1, Y1), in_region(X1, Y1, X, Y) } N.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% undiscovered_count(X, Y, U) 
+% the number of undiscovered cells in the region around a given cell
+%%%%%
+% Not working
+%%%%%
+undiscovered_count(X, Y, U) :- cell(X, Y), range(N), range(U),
+					#count { X1, Y1 : -discovered(X1, Y1), in_region(X1, Y1, X, Y) } N.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% safe means that a cell is not be a mine...
+% In contrast, -safe will be used to indicate a mine cell
+% safe(X, Y) :- cell(X, Y).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% When there are no unsafe cells that are not discovered, the game is complete
+is_complete :- not -discovered(X, Y), cell(X, Y).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% to_click means the program can safely click on the cell to advance the game
+to_click(X, Y) :- cell(X, Y).
+
 
 % ==============================================================
 % Helper Predicates: for easier reuse of common concepts
@@ -148,6 +169,10 @@ discovered(X, Y) :- danger_level(X, Y, D).
 % A given cell can only have one danger level
 :- danger_level(X, Y, D2), danger_level(X, Y, D1), 
 	D1 != D2, danger(D1), danger(D2).
+	
+% A given cell can only have one undiscovered_count
+:- undiscovered_count(X, Y, U1), undiscovered_count(X, Y, U2),
+	U1 != U2, danger(U1), danger(U2).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%  Unfinished
@@ -237,7 +262,11 @@ discovered(X, Y) :- danger_level(X, Y, D).
 % ==============================================================
 
 #show danger_level/3.
-#show discovered/2.
+% #show discovered/2.
+#show -discovered/2.
 
 % #show in_region/4.
 #show -safe/2.
+
+#show undiscovered_count/3.
+#show known_mine_count/3.
