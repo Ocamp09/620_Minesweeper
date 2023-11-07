@@ -18,11 +18,11 @@ creator(max).
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % safe means that a cell is not be a mine...
 % In contrast, -safe will be used to indicate a mine cell
-safe(X, Y) :- cell(X, Y).
+% safe(X, Y) :- cell(X, Y).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% When there are no unsafe cells that are not uncovered, the game is complete
-is_complete :- not -uncovered(X, Y), cell(X, Y).
+% When there are no unsafe cells that are not discovered, the game is complete
+is_complete :- not -discovered(X, Y), cell(X, Y).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % to_click means the program can safely click on the cell to advance the game
@@ -141,8 +141,8 @@ in_region(X1, Y1, X2, Y2) :- adj_neighbor(X1, Y1, X2, Y2).
 % ==============================================================
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% If the danger_level of a cell is known, it must be uncovered...
-uncovered(X, Y) :- danger_level(X, Y, D).
+% If the danger_level of a cell is known, it must be discovered...
+discovered(X, Y) :- danger_level(X, Y, D).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % A given cell can only have one danger level
@@ -150,11 +150,41 @@ uncovered(X, Y) :- danger_level(X, Y, D).
 	D1 != D2, danger(D1), danger(D2).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% If count flags in region of a cell equals the danger level of that cell, all remaining cells are safe...
+%%%  Unfinished
+%%%%%%%%%%%%%%%%%%
+% If count -safe in region of a cell equals the danger level of that cell, all remaining cells are safe...
+% safe(X1, Y1) :- in_region(X1, Y1, X2, Y2), 
+				% danger_level(X2, Y2, D),
+				% #count { -safe(X3, Y3) } S,
+				% S == D,
+				% X3 != X1, X3 != X2,
+				% Y3 != Y1, Y3 != Y2,
+				% cell(X3, Y3).
 
-%%%
-% TO DO
-%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%  Unfinished
+%%%%%%%%%%%%%%%%%%
+% If there is a diag_neighbor cell with a danger level not satisfied by all surrounding cells, and count undiscovered cells is not sufficient wiggle room, then cell is not safe
+
+% -safe(X1, Y1) :- diag_neighbor(X1, Y1, X2, Y2),
+				% danger_level(X2, Y2, D),
+				% known_mine_count(X2, Y2, M),
+				% M < D,
+				% undiscovered_count(X2, Y2, U),
+				% U <= 1.
+
+% -safe(X1, Y1) :- in_region(X1, Y1, X2, Y2), 
+				% -discovered(X1, Y1),
+				% danger_level(X2, Y2, D),
+				% #count { -safe(X, Y) } S,
+				% S < D, danger(S), 
+				% #count { -discovered(X, Y) } K,
+				% K < 2, danger(K),
+				% X3 != X1, X3 != X2,
+				% Y3 != Y1, Y3 != Y2,
+				% cell(X3, Y3).
+				% cell(X, Y).
 
 % ==============================================================
 % Executability Conditions:
@@ -169,9 +199,9 @@ uncovered(X, Y) :- danger_level(X, Y, D).
 % ==============================================================
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% CWA: Any cell not defined as uncovered is -uncovered
+% CWA: Any cell not defined as discovered is -discovered
 
--uncovered(X, Y) :- not uncovered(X, Y), num_x(X), num_y(Y).
+-discovered(X, Y) :- not discovered(X, Y), cell(X, Y).
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -207,6 +237,7 @@ uncovered(X, Y) :- danger_level(X, Y, D).
 % ==============================================================
 
 #show danger_level/3.
-#show uncovered/2.
+#show discovered/2.
 
 % #show in_region/4.
+#show -safe/2.
