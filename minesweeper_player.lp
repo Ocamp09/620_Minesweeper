@@ -6,15 +6,27 @@ creator(max).
 % ==============================================================
 % Axioms
 % ==============================================================
-% Fluent?
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % danger_level(X, Y, D) :- 
 % X is x coordinate of cell, 
 % Y is y coordinate of cell
 % D is danger level of cell
 % danger_level(X, Y, D) :- num_x(X), num_y(Y), danger(D).
+% ^If we include planning module, will need to define as fluent...
 
-% safe means that the agent can "click" on the cell and it will not be a mine...
-safe(X, Y) :- num_x(X), num_y(Y).
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% safe means that a cell is not be a mine...
+% In contrast, -safe will be used to indicate a mine cell
+safe(X, Y) :- cell(X, Y).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% When there are no unsafe cells that are not uncovered, the game is complete
+is_complete :- not -uncovered(X, Y), cell(X, Y).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% to_click means the program can safely click on the cell to advance the game
+to_click(X, Y) :- cell(X, Y).
 
 % ===================================================================
 % --------------------------------------------------------------
@@ -140,6 +152,10 @@ uncovered(X, Y) :- danger_level(X, Y, D).
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % If count flags in region of a cell equals the danger level of that cell, all remaining cells are safe...
 
+%%%
+% TO DO
+%%%
+
 % ==============================================================
 % Executability Conditions:
 % ==============================================================
@@ -152,13 +168,16 @@ uncovered(X, Y) :- danger_level(X, Y, D).
 % Closed World Assumptions: if we haven't said it already...
 % ==============================================================
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % CWA: Any cell not defined as uncovered is -uncovered
 
 -uncovered(X, Y) :- not uncovered(X, Y), num_x(X), num_y(Y).
 
-% ??? Any cell which has a danger level other than 9 is uncovered?  Keep???
 
-% danger_level(X, Y, 9) :- not danger_level(X, Y, D), num_x(X), num_y(Y), danger(D).
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% If we have no reason to believe the game is complete, then it is not complete
+
+-is_complete :- not is_complete.
 
 
 % ==============================================================
@@ -177,7 +196,7 @@ uncovered(X, Y) :- danger_level(X, Y, D).
 
 % If there is a cell with danger level 1 and only one undiscovered cell in region, with flag count (-safe(X, Y)) in region(X, Y) = 0, then place flag in that undiscovered cell.
 
-% Moves to make are essentially prioritized as follows:
+% Moves are essentially prioritized as follows:
 % 1) Click on a known "safe" cell -- as determined by logic rules...
 % 2) Place a flag over a known mine -- Mark a cell as -safe
 % 3) Gamble...
