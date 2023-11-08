@@ -9,11 +9,15 @@ creator(max).
 % --------------------------------------------------------------
 % ===================================================================
 
-% Danger level
-danger(0..8).
+% Danger level = possible number of mines in region
+range(0..8).
 
 % Generates the cells for each coordinate specified above
-cell(X,Y) :- num_x(X), num_y(Y).
+cell(X,Y) :- cells_x(X), cells_y(Y).
+
+% Extracts x and y dimensions from the grid_size predicate (imported by engine)
+cells_x(1..X) :- grid_size(X, _).
+cells_y(1..Y) :- grid_size(Y, _).
 
 % ===================================================================
 % --------------------------------------------------------------
@@ -26,29 +30,27 @@ cell(X,Y) :- num_x(X), num_y(Y).
 % ==============================================================
 
 % Number of cells for x (horizontal) and y (vertical)
-num_x(1..7).
-num_y(1..7).
-range(0..8).
+grid_size(7, 7).
 
 % ==============================================================
 % Game Board Facts: what is known about the state of the game
 % ==============================================================
 
-danger_level(3, 3, 2).
-danger_level(3, 4, 2).
-danger_level(3, 5, 4).
-danger_level(4, 2, 1).
-danger_level(4, 3, 1).
-danger_level(4, 4, 0).
-danger_level(4, 5, 1).
-danger_level(5, 2, 1).
-danger_level(5, 3, 0).
-danger_level(5, 4, 0).
-danger_level(5, 5, 2).
-danger_level(6, 2, 1).
-danger_level(6, 3, 2).
-danger_level(6, 4, 1).
-danger_level(6, 5, 2).
+holds(danger_level(3, 3, 2), 0).
+holds(danger_level(3, 4, 2), 0).
+holds(danger_level(3, 5, 4), 0).
+holds(danger_level(4, 2, 1), 0).
+holds(danger_level(4, 3, 1), 0).
+holds(danger_level(4, 4, 0), 0).
+holds(danger_level(4, 5, 1), 0).
+holds(danger_level(5, 2, 1), 0).
+holds(danger_level(5, 3, 0), 0).
+holds(danger_level(5, 4, 0), 0).
+holds(danger_level(5, 5, 2), 0).
+holds(danger_level(6, 2, 1), 0).
+holds(danger_level(6, 3, 2), 0).
+holds(danger_level(6, 4, 1), 0).
+holds(danger_level(6, 5, 2), 0).
 
 % The ASP program can just re-evaluate which cells are safe and -safe each time...
 
@@ -62,42 +64,43 @@ danger_level(6, 5, 2).
 % X is x coordinate of cell, 
 % Y is y coordinate of cell
 % D is danger level of cell
-% danger_level(X, Y, D) :- num_x(X), num_y(Y), danger(D).
-% ^If we include planning module, will need to define as fluent...
+
+fluent(inertial, danger_level(X, Y, D)) :- cell(X, Y), range(D).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % known_mine_count(X, Y, M) 
 % the number of known mines in the region around a given cell
-%%%%%
-% Not working
-%%%%%
-known_mine_count(X, Y, M) :- cell(X, Y),
-					range(M),
-					M = #count { X1, Y1 : -safe(X1, Y1), in_region(X1, Y1, X, Y) }.
+
+fluent(inertial, known_mine_count(X, Y, M)) :- cell(X, Y), range(M).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % undiscovered_count(X, Y, U) 
 % the number of undiscovered cells in the region around a given cell
-%%%%%
-% Not working
-%%%%%
+
+fluent(inertial, undiscovered_count(X, Y, U)) :- cell(X), cell(Y), range(U).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% safe(X, Y)
+% a cell which does not have a mine.
+
+fluent(inertial, safe(X, Y)) :- cell(X, Y).
+
+
+% ==============================================================
+% Positive definition of fluents
+% ==============================================================
+
+% Danger level is already input by the game engine
+
+known_mine_count(X, Y, M) :- cell(X, Y),
+					range(M),
+					M = #count { X1, Y1 : -safe(X1, Y1), in_region(X1, Y1, X, Y) }.
+
+
 undiscovered_count(X, Y, U) :- cell(X, Y),
 					range(U),
-					U = #count { X1, Y1 : -discovered(X1, Y1), in_region(X1, Y1, X, Y) }.
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% safe means that a cell is not be a mine...
-% In contrast, -safe will be used to indicate a mine cell
-% safe(X, Y) :- cell(X, Y).
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% When there are no unsafe cells that are not discovered, the game is complete
-is_complete :- not -discovered(X, Y), cell(X, Y).
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% to_click means the program can safely click on the cell to advance the game
-% to_click(X, Y) :- cell(X, Y).
-
+					U = #count { X1, Y1 : -discovered(X1, Y1), 
+					in_region(X1, Y1, X, Y) }.
 
 % ==============================================================
 % Helper Predicates: for easier reuse of common concepts
@@ -112,7 +115,7 @@ adj_neighbor(X1, Y1, X2, Y2) :- cell(X1, Y1),
 								Y1 = Y2 + 1.
 adj_neighbor(X1, Y1, X2, Y2) :- cell(X1, Y1), 
 								cell(X2, Y2), 
-								X1 = X2,	
+								X1 = X2,
 								Y1 = Y2 - 1.
 adj_neighbor(X1, Y1, X2, Y2) :- cell(X1, Y1), 
 								cell(X2, Y2), 
@@ -203,6 +206,15 @@ discovered(X, Y) :- -safe(X, Y).
 %%%%%%%%%%%%%%%%%%
 % If there is a diag_neighbor cell with a danger level not satisfied by all surrounding cells, and count undiscovered cells is not sufficient wiggle room, then cell is not safe
 
+% Starting with one case, where corner cell is known mine
+% -safe(X2, Y2) :- diag_neighbor(X1, Y1, X2, Y2),
+				% known_mine_count(X1, Y1, M),
+				% danger_level(X1, Y1, D),
+				% undiscovered_count(X1, Y1, U),
+				% -discovered(X2, Y2),
+				% D - M == 1,
+				% U == 1.
+
 % -safe(X2, Y2) :- in_region(X2, Y2, X1, Y1),
 					% danger_level(X1, Y1, D),
 					% known_mine_count(X1, Y1, M),
@@ -227,11 +239,68 @@ discovered(X, Y) :- -safe(X, Y).
 
 -discovered(X, Y) :- not discovered(X, Y), cell(X, Y).
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% GENERAL CWA FOR DEFINED FLUENTS
+
+-holds(F, I) :- fluent(defined, F),
+				not holds(F, I),
+				step(I).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% If we have no reason to believe the game is complete, then it is not complete
+% Initial situation: what holds at time step 0
+% CWA for time step 0
 
--is_complete :- not is_complete.
+-holds(F, 0) :- fluent(inertial, F), not holds(F, 0).
+
+
+% ==============================================================
+% GENERAL INERTIA AXIOMS FOR INERTIAL FLUENTS:
+% ==============================================================
+
+holds(F,I1) :- fluent(inertial,F),
+				holds(F,I),
+				not -holds(F,I1),
+				I < n,
+				next(I, I1).
+-holds(F,I1) :- fluent(inertial,F),
+				-holds(F,I),
+				not holds(F,I1),
+				I < n,
+				next(I, I1).
+
+
+% ==============================================================
+% Step Info:
+% ==============================================================
+
+#const n=1. % change the number
+step(0..n).
+next(I, I1) :- step(I), step(I1), I1 = I+1.
+
+% ===============================================
+% Planning Module
+% ===============================================
+% Modify the rule below according to the goal
+% of your particular problem:
+% goal(I) :- ...
+
+% success :- goal(I),
+			% I <= n.
+% :- not success.
+% occurs(A, I) | -occurs(A, I) :- action(A),
+			% step(I),
+			% not goal(I),
+			% I < n.
+% something_happened(I) :- occurs(A, I).
+% :- step(J),
+			% goal(I),
+			% not goal(I0),
+			% I0 = I-1,
+			% J < I,
+			% not something_happened(J).
+% #show occurs/2.
+
+
 
 
 % ==============================================================
@@ -246,13 +315,13 @@ discovered(X, Y) :- -safe(X, Y).
 
 % Do we want to pass the safety states back and forth between the game engine and the ASP program, to speed up the processing?  Or does the danger level accomplish that?  Maybe just the -safe cells?
 
-
+% Send only the known danger levels, since ASP can infer the safety of the cells from that...
 
 % If there is a cell with danger level 1 and only one undiscovered cell in region, with flag count (-safe(X, Y)) in region(X, Y) = 0, then place flag in that undiscovered cell.
 
 % Moves are essentially prioritized as follows:
 % 1) Click on a known "safe" cell -- as determined by logic rules...
-% 2) Place a flag over a known mine -- Mark a cell as -safe
+% Nope >> 2) Place a flag over a known mine -- Mark a cell as -safe
 % 3) Gamble...
 
 
@@ -265,8 +334,8 @@ discovered(X, Y) :- -safe(X, Y).
 % #show -discovered/2.
 
 % #show in_region/4.
-% #show -safe/2.
-#show safe/2.
+#show -safe/2.
+% #show safe/2.
 
 #show undiscovered_count/3.
 #show known_mine_count/3.
