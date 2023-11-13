@@ -161,7 +161,6 @@ diag_neighbor(X1, Y1, X2, Y2) :- cell(X1, Y1),
 
 in_region(X1, Y1, X2, Y2) :- diag_neighbor(X1, Y1, X2, Y2).
 in_region(X1, Y1, X2, Y2) :- adj_neighbor(X1, Y1, X2, Y2).
-% Should cells be in their own regions too?  Depends how we plan to use this...
 
 % ==============================================================
 % Dynamic Causal Laws:
@@ -185,17 +184,20 @@ holds(discovered(X, Y), I) :- -holds(safe(X, Y), I).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % A given cell can only have one danger level
+
 :- danger_level(X, Y, D2), danger_level(X, Y, D1), 
 	D1 != D2.
 	
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % A given cell can only have one undiscovered_count at a given time step
+
 :- holds(undiscovered_count(X, Y, U1), I), 
 	holds(undiscovered_count(X, Y, U2), I), 
 	U1 != U2, step(I).
 	
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % A given cell can only hvae one mine count at a given time step
+
 :- holds(known_mine_count(X, Y, U1), I), 
 	holds(known_mine_count(X, Y, U2), I), 
 	U1 != U2, step(I).
@@ -284,7 +286,8 @@ next(I, I1) :- step(I), step(I1), I1 = I+1.
 
 % Moves are essentially prioritized as follows:
 % 1) Click on a known "safe" cell -- as determined by logic rules...
-% 2) Simulate possible theories for success, based on the next layer around discovered cells... remove the logically inconsistent theories
+% 2) Simulate possible theories for success, based on the next layer around discovered cells... 
+%    Then, remove the logically inconsistent theories...
 % 3) Gamble...
 
 
