@@ -172,7 +172,6 @@ in_region(X1, Y1, X2, Y2) :- adj_neighbor(X1, Y1, X2, Y2).
 % This is handled by the game engine...
 
 
-
 % ==============================================================
 % State Constraints:
 % ==============================================================
@@ -203,8 +202,6 @@ holds(discovered(X, Y), I) :- -holds(safe(X, Y), I).
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%  Unfinished
-%%%%%%%%%%%%%%%%%%
 % If count -safe in region of a cell equals the danger level of that cell, all remaining cells are safe...
 
 holds(safe(X2, Y2), I1) :- in_region(X2, Y2, X1, Y1),
@@ -214,24 +211,8 @@ holds(safe(X2, Y2), I1) :- in_region(X2, Y2, X1, Y1),
 				-holds(discovered(X2, Y2), I),
 				step(I1).
 
-% safe(X1, Y1) :- in_region(X1, Y1, X2, Y2), 
-				% danger_level(X2, Y2, D),
-				% S = #count { X3, Y3 : -holds(safe(X3, Y3)), in_region(X3, Y3, X2, Y2) },
-				% S == D,
-				% X3 != X1, X3 != X2,
-				% Y3 != Y1, Y3 != Y2,
-				% cell(X3, Y3).
-
-% safe(X2, Y2) :- danger_level(X1, Y1, D),
-				% known_mine_count(X1, Y1, M),
-				% in_region(X2, Y2, X1, Y1),
-				% M = D.
-
-% -safe(3, 2).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%  Unfinished
-%%%%%%%%%%%%%%%%%%
 % If there is a diag_neighbor cell with a danger level not satisfied by all surrounding cells, and count undiscovered cells is not sufficient wiggle room, then cell is not safe
 
 % Starting with one case, where corner cell is known mine
@@ -245,12 +226,6 @@ holds(safe(X2, Y2), I1) :- in_region(X2, Y2, X1, Y1),
 				U == 1,
 				-holds(discovered(X2, Y2), I),
 				next(I, I1).
-
-% -safe(X2, Y2) :- in_region(X2, Y2, X1, Y1),
-					% danger_level(X1, Y1, D),
-					% known_mine_count(X1, Y1, M),
-					% undiscovered_count(X1, Y1, U),
-					% D - M = U.
 
 
 % ==============================================================
@@ -307,15 +282,9 @@ next(I, I1) :- step(I), step(I1), I1 = I+1.
 % Do we hard code a strategy or have it simulate possibilities from its current position?
 % Simulating could lead to an exploding problem... (no pun intended)... factorial possibilities
 
-% Do we want to pass the safety states back and forth between the game engine and the ASP program, to speed up the processing?  Or does the danger level accomplish that?  Maybe just the -safe cells?
-
-% Send only the known danger levels, since ASP can infer the safety of the cells from that...
-
-% If there is a cell with danger level 1 and only one undiscovered cell in region, with flag count (-safe(X, Y)) in region(X, Y) = 0, then place flag in that undiscovered cell.
-
 % Moves are essentially prioritized as follows:
 % 1) Click on a known "safe" cell -- as determined by logic rules...
-% Nope >> 2) Place a flag over a known mine -- Mark a cell as -safe
+% 2) Simulate possible theories for success, based on the next layer around discovered cells... remove the logically inconsistent theories
 % 3) Gamble...
 
 
@@ -323,7 +292,7 @@ next(I, I1) :- step(I), step(I1), I1 = I+1.
 % Show Directives:
 % ==============================================================
 
-% #show danger_level/3.
+#show danger_level/3.
 % #show discovered/2.
 % #show -discovered/2.
 
@@ -334,10 +303,7 @@ s_safe(X, Y, I) :- holds(safe(X, Y), I).
 -s_safe(X, Y, I) :- -holds(safe(X, Y), I).
 
 #show s_safe/3.
-% #show -s_safe/3.
-
-% #show -safe/2.
-% #show safe/2.
+#show -s_safe/3.
 
 
 s_discovered(X, Y, I) :- holds(discovered(X, Y), I).
@@ -347,9 +313,9 @@ s_undiscovered_count(X, Y, M, I) :- holds(undiscovered_count(X, Y, M), I),
 								Y >= 2, Y <= 3.
 s_known_mine_count(X, Y, M, I) :- holds(known_mine_count(X, Y, M), I), 
 								I = 1,
-								X >= 3, X <= 4,
-								Y >= 2, Y <= 3.
+								X >= 5, X <= 6,
+								Y >= 1, Y <= 3.
 
-% #show s_undiscovered_count/4.
-% #show s_known_mine_count/4.
+#show s_undiscovered_count/4.
+#show s_known_mine_count/4.
 % #show s_discovered/3.
