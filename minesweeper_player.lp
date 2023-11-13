@@ -72,7 +72,7 @@ cells_y(1..Y) :- grid_size(Y, _).
 % known_mine_count(X, Y, M) 
 % the number of known mines in the region around a given cell
 
-fluent(inertial, known_mine_count(X, Y, M)) :- cell(X, Y), range(M).
+fluent(defined, known_mine_count(X, Y, M)) :- cell(X, Y), range(M).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % discovered(X, Y) 
@@ -84,7 +84,7 @@ fluent(inertial, discovered(X, Y)) :- cell(X, Y).
 % undiscovered_count(X, Y, U) 
 % the number of undiscovered cells in the region around a given cell
 
-fluent(inertial, undiscovered_count(X, Y, U)) :- cell(X, Y), range(U).
+fluent(defined, undiscovered_count(X, Y, U)) :- cell(X, Y), range(U).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % safe(X, Y)
@@ -172,6 +172,7 @@ in_region(X1, Y1, X2, Y2) :- adj_neighbor(X1, Y1, X2, Y2).
 % This is handled by the game engine...
 
 
+
 % ==============================================================
 % State Constraints:
 % ==============================================================
@@ -181,16 +182,25 @@ in_region(X1, Y1, X2, Y2) :- adj_neighbor(X1, Y1, X2, Y2).
 holds(discovered(X, Y), I) :- danger_level(X, Y, D), step(I).
 
 % If a cell is not safe, it must be discovered...
-% holds(discovered(X, Y), I) :- -holds(safe(X, Y), I).
+holds(discovered(X, Y), I) :- -holds(safe(X, Y), I).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % A given cell can only have one danger level
 :- danger_level(X, Y, D2), danger_level(X, Y, D1), 
 	D1 != D2.
 	
-% A given cell can only have one undiscovered_count
-% :- holds(undiscovered_count(X, Y, U1), I), holds(undiscovered_count(X, Y, U2), I),
-	% U1 != U2, range(U1), range(U2), step(I).
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% A given cell can only have one undiscovered_count at a given time step
+:- holds(undiscovered_count(X, Y, U1), I), 
+	holds(undiscovered_count(X, Y, U2), I), 
+	U1 != U2, step(I).
+	
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% A given cell can only hvae one mine count at a given time step
+:- holds(known_mine_count(X, Y, U1), I), 
+	holds(known_mine_count(X, Y, U2), I), 
+	U1 != U2, step(I).
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%  Unfinished
@@ -282,7 +292,7 @@ holds(F,I1) :- fluent(inertial,F),
 % Step Info:
 % ==============================================================
 
-#const n=1. % change the number
+#const n=2. % change the number
 step(0..n).
 next(I, I1) :- step(I), step(I1), I1 = I+1.
 
@@ -332,7 +342,7 @@ s_safe(X, Y, I) :- holds(safe(X, Y), I).
 
 s_discovered(X, Y, I) :- holds(discovered(X, Y), I).
 s_undiscovered_count(X, Y, M, I) :- holds(undiscovered_count(X, Y, M), I), 
-								I = 1,
+								I = 2,
 								X >= 3, X <= 4,
 								Y >= 2, Y <= 3.
 s_known_mine_count(X, Y, M, I) :- holds(known_mine_count(X, Y, M), I), 
