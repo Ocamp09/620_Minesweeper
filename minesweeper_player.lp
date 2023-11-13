@@ -70,19 +70,19 @@ cells_y(1..Y) :- grid_size(Y, _).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % known_mine_count(X, Y, M) 
-% the number of known mines in the region around a given cell
+% the number of known mines in the region around a given cell.
 
 fluent(defined, known_mine_count(X, Y, M)) :- cell(X, Y), range(M).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % discovered(X, Y) 
-% whether a given cell has been discovered yet
+% whether a given cell has been discovered yet - either the danger level or as an inferred mine.
 
 fluent(inertial, discovered(X, Y)) :- cell(X, Y).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % undiscovered_count(X, Y, U) 
-% the number of undiscovered cells in the region around a given cell
+% the number of undiscovered cells in the region around a given cell.
 
 fluent(defined, undiscovered_count(X, Y, U)) :- cell(X, Y), range(U).
 
@@ -97,7 +97,7 @@ fluent(defined, safe(X, Y)) :- cell(X, Y).
 % Positive definition of fluents
 % ==============================================================
 
-% Danger level is already input by the game engine
+% Danger level is already input by the game engine.
 
 holds(known_mine_count(X, Y, M), I) :- cell(X, Y),
 					range(M),
@@ -157,7 +157,7 @@ diag_neighbor(X1, Y1, X2, Y2) :- cell(X1, Y1),
 								Y1 = Y2 - 1.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Define whether a cell is in the same region as another cell
+% Define whether a cell is in the same region as another cell.
 
 in_region(X1, Y1, X2, Y2) :- diag_neighbor(X1, Y1, X2, Y2).
 in_region(X1, Y1, X2, Y2) :- adj_neighbor(X1, Y1, X2, Y2).
@@ -176,27 +176,27 @@ in_region(X1, Y1, X2, Y2) :- adj_neighbor(X1, Y1, X2, Y2).
 % ==============================================================
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% If the danger_level of a cell is known, it must be discovered...
+% If the danger_level of a cell is known, it must be discovered.
 holds(discovered(X, Y), I) :- danger_level(X, Y, D), step(I).
 
 % If a cell is not safe, it must be discovered...
 holds(discovered(X, Y), I) :- -holds(safe(X, Y), I).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% A given cell can only have one danger level
+% A given cell can only have one danger level.
 
 :- danger_level(X, Y, D2), danger_level(X, Y, D1), 
 	D1 != D2.
 	
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% A given cell can only have one undiscovered_count at a given time step
+% A given cell can only have one undiscovered_count at a given time step.
 
 :- holds(undiscovered_count(X, Y, U1), I), 
 	holds(undiscovered_count(X, Y, U2), I), 
 	U1 != U2, step(I).
 	
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% A given cell can only hvae one mine count at a given time step
+% A given cell can only have one mine count at a given time step.
 
 :- holds(known_mine_count(X, Y, U1), I), 
 	holds(known_mine_count(X, Y, U2), I), 
@@ -204,7 +204,7 @@ holds(discovered(X, Y), I) :- -holds(safe(X, Y), I).
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% If count -safe in region of a cell equals the danger level of that cell, all remaining cells are safe...
+% If the known mine count of a cell (number of unsafe cells in its region) equals the danger level of that cell, all remaining cells are safe (because a cell cannot have more unsafe cells than its danger level).
 
 holds(safe(X2, Y2), I1) :- in_region(X2, Y2, X1, Y1),
 				danger_level(X1, Y1, D),
@@ -215,20 +215,15 @@ holds(safe(X2, Y2), I1) :- in_region(X2, Y2, X1, Y1),
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% If there is a diag_neighbor cell with a danger level not satisfied by all surrounding cells, and count undiscovered cells is not sufficient wiggle room, then cell is not safe
+% If there is a cell whose danger level is equal to the sum of known mines and undiscovered cells, then those undiscovered cells must be mines.
 
-% Starting with one case, where corner cell is known mine
-% Corner Rule
--holds(safe(X2, Y2), I1) :- diag_neighbor(X1, Y1, X2, Y2),
+-holds(safe(X2, Y2), I1) :- in_region(X1, Y1, X2, Y2),
 				danger_level(X1, Y1, D),
-				D == 1,
 				holds(known_mine_count(X1, Y1, M), I),
-				M == 0,
 				holds(undiscovered_count(X1, Y1, U), I),
-				U == 1,
+				D = M + U,
 				-holds(discovered(X2, Y2), I),
 				next(I, I1).
-
 
 % ==============================================================
 % Executability Conditions:
