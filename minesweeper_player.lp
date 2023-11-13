@@ -323,7 +323,7 @@ next(I, I1) :- step(I), step(I1), I1 = I+1.
 % Show Directives:
 % ==============================================================
 
-#show danger_level/3.
+% #show danger_level/3.
 % #show discovered/2.
 % #show -discovered/2.
 
@@ -334,7 +334,7 @@ s_safe(X, Y, I) :- holds(safe(X, Y), I).
 -s_safe(X, Y, I) :- -holds(safe(X, Y), I).
 
 #show s_safe/3.
-#show -s_safe/3.
+% #show -s_safe/3.
 
 % #show -safe/2.
 % #show safe/2.
@@ -350,6 +350,6 @@ s_known_mine_count(X, Y, M, I) :- holds(known_mine_count(X, Y, M), I),
 								X >= 3, X <= 4,
 								Y >= 2, Y <= 3.
 
-#show s_undiscovered_count/4.
-#show s_known_mine_count/4.
-#show s_discovered/3.
+% #show s_undiscovered_count/4.
+% #show s_known_mine_count/4.
+% #show s_discovered/3.

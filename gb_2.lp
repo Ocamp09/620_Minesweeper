@@ -26,7 +26,11 @@ danger_level(5, 2, 1).
 danger_level(5, 3, 0).
 danger_level(5, 4, 0).
 danger_level(5, 5, 2).
-danger_level(6, 2, 1).
+danger_level(6, 2, 2).
 danger_level(6, 3, 2).
 danger_level(6, 4, 1).
 danger_level(6, 5, 2).
+
+% Discovered cells
+danger_level(3, 1, 2).
+danger_level(4, 1, 1).
