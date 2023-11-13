@@ -196,6 +196,14 @@ holds(discovered(X, Y), I) :- danger_level(X, Y, D), step(I).
 %%%  Unfinished
 %%%%%%%%%%%%%%%%%%
 % If count -safe in region of a cell equals the danger level of that cell, all remaining cells are safe...
+
+% holds(safe(X2, Y2), I1) :- in_region(X2, Y2, X1, Y1),
+				% danger_level(X1, Y1, D),
+				% holds(known_mine_count(X1, Y1, M), I),
+				% D = M,
+				% -holds(discovered(X2, Y2), I),
+				% step(I1).
+
 % safe(X1, Y1) :- in_region(X1, Y1, X2, Y2), 
 				% danger_level(X2, Y2, D),
 				% S = #count { X3, Y3 : -holds(safe(X3, Y3)), in_region(X3, Y3, X2, Y2) },
@@ -324,11 +332,11 @@ s_safe(X, Y, I) :- holds(safe(X, Y), I).
 
 s_discovered(X, Y, I) :- holds(discovered(X, Y), I).
 s_undiscovered_count(X, Y, M, I) :- holds(undiscovered_count(X, Y, M), I), 
-								I = 0,
+								I = 1,
 								X >= 3, X <= 4,
 								Y >= 2, Y <= 3.
 s_known_mine_count(X, Y, M, I) :- holds(known_mine_count(X, Y, M), I), 
-								I = 0,
+								I = 1,
 								X >= 3, X <= 4,
 								Y >= 2, Y <= 3.
 
