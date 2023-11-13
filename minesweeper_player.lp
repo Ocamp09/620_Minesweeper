@@ -66,7 +66,9 @@ cells_y(1..Y) :- grid_size(Y, _).
 % Y is y coordinate of cell
 % D is danger level of cell
 
-% danger_level(X, Y, D) :- cell(X, Y), limit(D).
+% danger_level(X, Y, D) :- cell(X, Y), limit(D).  
+% This is constant once known.  
+% It is provided by the python game engine, once a cell has been selected to be revealed.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % known_mine_count(X, Y, M) 
@@ -111,6 +113,7 @@ holds(undiscovered_count(X, Y, U), I) :- cell(X, Y),
 					U = #count { X1, Y1 : -holds(discovered(X1, Y1), I), 
 					in_region(X1, Y1, X, Y) },
 					step(I).
+
 
 % ==============================================================
 % Helper Predicates: for easier reuse of common concepts
@@ -225,16 +228,16 @@ holds(safe(X2, Y2), I1) :- in_region(X2, Y2, X1, Y1),
 				-holds(discovered(X2, Y2), I),
 				next(I, I1).
 
+
 % ==============================================================
 % Executability Conditions:
 % ==============================================================
 
-% ?????
-
+% Not applicable.
 
 
 % ==============================================================
-% Closed World Assumptions: if we haven't said it already...
+% Closed World Assumptions:
 % ==============================================================
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -280,6 +283,7 @@ next(I, I1) :- step(I), step(I1), I1 = I+1.
 % Simulating could lead to an exploding problem... (no pun intended)... factorial possibilities
 
 % Moves are essentially prioritized as follows:
+
 % 1) Click on a known "safe" cell -- as determined by logic rules...
 % 2) Simulate possible theories for success, based on the next layer around discovered cells... 
 %    Then, remove the logically inconsistent theories...
