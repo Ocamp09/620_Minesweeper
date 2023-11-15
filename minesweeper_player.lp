@@ -15,7 +15,7 @@
 % ===================================================================
 % Main Strategy: We're stuck in a minefield and want to live...
 % ===================================================================
-"test out" several scenarios to find the safest solutions, given the danger levels in a certain vicinity and current known information?
+%"test out" several scenarios to find the safest solutions, given the danger levels in a certain vicinity and current known information?
 % How does it choose where to "look"?
 % How does it know the likelihood of success from its current options?
 % Do we hard code a strategy or have it simulate possibilities from its current position?
