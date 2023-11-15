@@ -9,7 +9,7 @@
 % ==============================================================
 
 % Number of cells for x (horizontal) and y (vertical)
-grid_size(7, 7).
+board_size(7, 7).
 
 % ==============================================================
 % Game Board Facts: what is known about the state of the game

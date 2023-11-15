@@ -282,3 +282,4 @@ s_safe(X, Y, I) :- holds(safe(X, Y), I).
 % Show Directives:
 % ==============================================================
 #show s_safe/3.
+#show -s_safe/3.
