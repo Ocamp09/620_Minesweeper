@@ -143,8 +143,25 @@ class MinesweeperGame:
 
     # method to take the raw asp response and turn it into the next coordinates to play
     def parse_asp(self, response):
-        print(response)
-        return response
+        # First move is the 7th index
+        response_arr = response.split(" ")
+
+        # if no move was returned just do a random move
+        if "safe_move" not in response_arr[7]:
+            x_cord = random.randint(0, self.width - 1)
+            y_cord = random.randint(0, self.height - 1)
+            return x_cord, y_cord
+        # if the 7th index has "safe_move" then assign the move
+        move = response_arr[7]
+        # narrow down just the coordinates
+        coord_start = move.find("(") + 1
+        coord_end = move.find(")")
+        coord_arr = move[coord_start:coord_end:].split(",")
+
+        # pull the x and y coordinates from array and return
+        x_cord = coord_arr[0]
+        y_cord = coord_arr[1]
+        return x_cord, y_cord
 
     # function to reveal a random cell/cells to give the ASP code a starting point
     def first_move(self):
@@ -168,18 +185,21 @@ player_asp_file = "minesweeper_player.lp"
 game.first_move()
 print("Starting board: ")
 game.display_board()
-next_cords = game.write_to_file()
-
+next_x, next_y = game.write_to_file()
+print(next_x, next_y)
+game_over = game.reveal_cell(int(next_x), int(next_y))
+game.display_board()
 # # temp variable to stop infinite loops, remove later
 # temp = 0
 # # loop until game is over
-# while temp <= 3 and not game_over:
+#while temp <= 3 and not game_over:
+# while not game_over:
 #     # send game board to ASP and get response in return
 #     next_cords = game.write_to_file()
-#
-#     # add ASP response to reveal_cell
-#     # game_over = game.reveal_cell(random.randint(0, game.width - 1), random.randint(0, game.height - 1))
-#
-#     # display new board to see ASP order of actions
-#     # game.display_board()
+
+    # add ASP response to reveal_cell
+    # game_over = game.reveal_cell(random.randint(0, game.width - 1), random.randint(0, game.height - 1))
+
+    # display new board to see ASP order of actions
+    # game.display_board()
 #     temp += 1

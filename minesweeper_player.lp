@@ -94,7 +94,6 @@ fluent(defined, safe(X, Y)) :- cell(X, Y).
 % ==============================================================
 
 % Danger level is already input by the game engine.
-
 holds(known_mine_count(X, Y, M), I) :- cell(X, Y),
 					range(M),
 					M = #count { X1, Y1 : -holds(safe(X1, Y1), I), 
@@ -112,7 +111,6 @@ holds(unrevealed_count(X, Y, U), I) :- cell(X, Y),
 % ==============================================================
 % Helper Predicates: for easier reuse of common concepts
 % ==============================================================
-
 %==========================
 % Define adjacent neighbor cells to be the top, bottom, left, and right of a cell.
 
@@ -154,16 +152,13 @@ diag_neighbor(X1, Y1, X2, Y2) :- cell(X1, Y1),
 								Y1 = Y2 - 1.
 
 %==========================
-
 % Define whether a cell is in the same region as another cell.
-
 in_region(X1, Y1, X2, Y2) :- diag_neighbor(X1, Y1, X2, Y2).
 in_region(X1, Y1, X2, Y2) :- adj_neighbor(X1, Y1, X2, Y2).
 
 % ==============================================================
 % Dynamic Causal Laws:
 % ==============================================================
-
 %==========================
 % If we uncover a cell, the danger_level becomes known... 
 % This is handled by the game engine...
@@ -182,28 +177,25 @@ holds(revealed(X, Y), I) :- -holds(safe(X, Y), I).
 
 %==========================
 % A given cell can only have one danger level.
-
 :- danger_level(X, Y, D2), danger_level(X, Y, D1), 
 	D1 != D2.
 	
 %==========================
 % A given cell can only have one unrevealed_count at a given time step.
-
 :- holds(unrevealed_count(X, Y, U1), I), 
 	holds(unrevealed_count(X, Y, U2), I), 
 	U1 != U2, step(I).
 	
 %==========================
 % A given cell can only have one mine count at a given time step.
-
 :- holds(known_mine_count(X, Y, U1), I), 
 	holds(known_mine_count(X, Y, U2), I), 
 	U1 != U2, step(I).
 
 
 %==========================
-% If the known mine count of a cell (number of unsafe cells in its region) equals the danger level of that cell, all remaining cells are safe (because a cell cannot have more unsafe cells than its danger level).
-
+% If the known mine count of a cell (number of unsafe cells in its region) equals the danger level of that cell, all
+% remaining cells are safe (because a cell cannot have more unsafe cells than its danger level).
 holds(safe(X2, Y2), I1) :- in_region(X2, Y2, X1, Y1),
 				danger_level(X1, Y1, D),
 				holds(known_mine_count(X1, Y1, M), I),
@@ -214,7 +206,6 @@ holds(safe(X2, Y2), I1) :- in_region(X2, Y2, X1, Y1),
 
 %==========================
 % If there is a cell whose danger level is equal to the sum of known mines and unrevealed cells, then those unrevealed cells must be mines.
-
 -holds(safe(X2, Y2), I1) :- in_region(X1, Y1, X2, Y2),
 				danger_level(X1, Y1, D),
 				holds(known_mine_count(X1, Y1, M), I),
@@ -274,12 +265,12 @@ s_known_mine_count(X, Y, M, I) :- holds(known_mine_count(X, Y, M), I),
 								X >= 5, X <= 6,
 								Y >= 1, Y <= 3.
 
-s_safe(X, Y, I) :- holds(safe(X, Y), I).
--s_safe(X, Y, I) :- -holds(safe(X, Y), I).
+safe_move(X, Y, I) :- holds(safe(X, Y), I).
+-safe_move(X, Y, I) :- -holds(safe(X, Y), I).
 
 
 % ==============================================================
 % Show Directives:
 % ==============================================================
-#show s_safe/3.
-#show -s_safe/3.
+#show safe_move/3.
+%#show -s_safe/3.
