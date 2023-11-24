@@ -54,8 +54,8 @@
 % Static Facts: Always true for the game of Minesweeper
 % ===================================================================
 % Extracts x and y dimensions from the board_size predicate (imported by engine)
-cells_x(1..X) :- board_size(X, _).
-cells_y(1..Y) :- board_size(Y, _).
+cells_x(1..X-1) :- board_size(X, _).
+cells_y(1..Y-1) :- board_size(Y, _).
 
 % Generates the cells for each coordinate specified above
 cell(X,Y) :- cells_x(X), cells_y(Y).
