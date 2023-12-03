@@ -54,8 +54,8 @@
 % Static Facts: Always true for the game of Minesweeper
 % ===================================================================
 % Extracts x and y dimensions from the board_size predicate (imported by engine)
-cells_x(1..X-1) :- board_size(X, _).
-cells_y(1..Y-1) :- board_size(Y, _).
+cells_x(1..X) :- board_size(X, _).
+cells_y(1..Y) :- board_size(Y, _).
 
 % Generates the cells for each coordinate specified above
 cell(X,Y) :- cells_x(X), cells_y(Y).
@@ -255,15 +255,15 @@ next(I, I1) :- step(I), step(I1), I1 = I+1.
 
 
 % Static predicates defined from fluents
-s_revealed(X, Y, I) :- holds(revealed(X, Y), I).
-s_unrevealed_count(X, Y, M, I) :- holds(unrevealed_count(X, Y, M), I), 
-								I = 2,
-								X >= 3, X <= 4,
-								Y >= 2, Y <= 3.
-s_known_mine_count(X, Y, M, I) :- holds(known_mine_count(X, Y, M), I), 
-								I = 1,
-								X >= 5, X <= 6,
-								Y >= 1, Y <= 3.
+% s_revealed(X, Y, I) :- holds(revealed(X, Y), I).
+% s_unrevealed_count(X, Y, M, I) :- holds(unrevealed_count(X, Y, M), I), 
+								% I = 2,
+								% X >= 3, X <= 4,
+								% Y >= 2, Y <= 3.
+% s_known_mine_count(X, Y, M, I) :- holds(known_mine_count(X, Y, M), I), 
+								% I = 1,
+								% X >= 5, X <= 6,
+								% Y >= 1, Y <= 3.
 
 safe_move(X, Y, I) :- holds(safe(X, Y), I).
 -safe_move(X, Y, I) :- -holds(safe(X, Y), I).
@@ -272,5 +272,6 @@ safe_move(X, Y, I) :- holds(safe(X, Y), I).
 % ==============================================================
 % Show Directives:
 % ==============================================================
+
 #show safe_move/3.
 %#show -s_safe/3.
