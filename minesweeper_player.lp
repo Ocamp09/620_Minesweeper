@@ -258,6 +258,29 @@ run_generator :- not safe_move(_, _, 2).
 holds(maybe_safe(X, Y), 3) | -holds(maybe_safe(X, Y), 3) :- run_generator,
 				holds(border_cell(X, Y), 3).
 				
+% If danger level of revealed neighbor of border cell is not satisfied, place a mine there until it is satisfied.
+
+-holds(maybe_safe(X, Y), 3) :- holds(border_cell(X, Y), 3),
+					-holds(revealed(X, Y), 3),
+					run_generator,
+					cell(X1, Y1),
+					in_region(X, Y, X1, Y1),
+					holds(theory_mine_count(X1, Y1, MT), 3),
+					holds(known_mine_count(X1, Y1, M), 1),
+					danger_level(X1, Y1, D),
+					MT + M < D.
+
+:- danger_level(X, Y, D), holds(theory_mine_count(X, Y, M), 3), M > D.
+
+% holds(maybe_safe(X, Y), 3) :- holds(border_cell(X, Y), 3),
+					% -holds(revealed(X, Y), 3),
+					% run_generator,
+					% cell(X1, Y1),
+					% in_region(X, Y, X1, Y1),
+					% holds(theory_mine_count(X1, Y1, M), 3),
+					% danger_level(X1, Y1, D),
+					% M = D.
+				
 % We want to make sure that we do not believe a cell is safe if it is likely to create problems for the danger levels of known/revealed cells
 
 
