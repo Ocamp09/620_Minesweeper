@@ -215,6 +215,29 @@ holds(safe(X2, Y2), I1) :- in_region(X2, Y2, X1, Y1),
 				-holds(revealed(X2, Y2), I),
 				next(I, I1).
 
+% 2 by 1 rule - if there is a 3 x 1 section and a 1 and a 2 next to each other, 
+% the mine goes in the spot on the other side of the 2 than the 1.
+% -holds(safe(X3, Y3), I1) :- limit()
+				% holds(revealed(X1, Y1), I),
+				% holds(revealed(X2, Y1), I),
+				% holds(revealed(X3, Y1), I),
+				% danger_level(X1, Y2, 1),
+				% danger_level(X2, Y2, 2),
+				% diag_neighbor(X1, Y1, X2, Y2),
+				% diag_neighbor(X3, Y3, X2, Y2),
+				% diag_neighbor(X1, Y3, X2, Y2),
+				% diag_neighbor(X3, Y1, X2, Y2),
+				% adj_neighbor(X1, Y1, X2, Y1),
+				% adj_neighbor(X1, Y1, X1, Y2),
+				% adj_neighbor(X3, Y1, X2, Y1),
+				% adj_neighbor(X3, Y1, X3, Y2),
+				% adj_neighbor(X1, Y3, X1, Y2),
+				% adj_neighbor(X1, Y3, X2, Y3),
+				% adj_neighbor(X3, Y3, X2, Y3),
+				% adj_neighbor(X3, Y3, X3, Y2).
+				
+% Recursive case rule... try to define possible sets of 
+% where the mines could be and where the safe cells could be
 
 % ==============================================================
 % Executability Conditions:
