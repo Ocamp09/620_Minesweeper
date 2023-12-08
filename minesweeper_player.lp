@@ -257,8 +257,14 @@ run_generator :- not safe_move(_, _, 2).
 % as long as run_generator is needed.
 holds(maybe_safe(X, Y), 3) | -holds(maybe_safe(X, Y), 3) :- run_generator,
 				holds(border_cell(X, Y), 3).
-				
-% If danger level of revealed neighbor of border cell is not satisfied, place a mine there until it is satisfied.
+
+%==========================
+% But all revealed cells / danger levels must be consistent at that time step 
+% in order for a set to be included in the answer set...
+% We want to make sure that we do not believe a cell is safe if it is likely
+% to create problems for the danger levels of known/revealed cells
+% If danger level of revealed neighbor of border cell is not satisfied, 
+% place a mine there until it is satisfied.
 
 -holds(maybe_safe(X, Y), 3) :- holds(border_cell(X, Y), 3),
 					-holds(revealed(X, Y), 3),
@@ -268,69 +274,17 @@ holds(maybe_safe(X, Y), 3) | -holds(maybe_safe(X, Y), 3) :- run_generator,
 					holds(theory_mine_count(X1, Y1, MT), 3),
 					holds(known_mine_count(X1, Y1, M), 1),
 					danger_level(X1, Y1, D),
-					MT + M < D.
-
+					MT + M != D.
+					
 :- danger_level(X, Y, D), holds(theory_mine_count(X, Y, M), 3), M > D.
 
-% holds(maybe_safe(X, Y), 3) :- holds(border_cell(X, Y), 3),
-					% -holds(revealed(X, Y), 3),
-					% run_generator,
-					% cell(X1, Y1),
-					% in_region(X, Y, X1, Y1),
-					% holds(theory_mine_count(X1, Y1, M), 3),
-					% danger_level(X1, Y1, D),
-					% M = D.
-				
-% We want to make sure that we do not believe a cell is safe if it is likely to create problems for the danger levels of known/revealed cells
+% But we don't want to believe that a cell is safe if it is near a mine 
+% and no other information is given about it... so prioritize solutions 
+% where we don't assume safety about cells that do not have danger levels 
+% near them to indicate that?  
+% Then it becomes an optimization problem...
+% Prioritize solutions where we do not assume corner border cells are safe too?
 
-
-% :- not holds(maybe_safe(X, Y), 3), 
-	% not -holds(maybe_safe(X, Y), 3), 
-	% holds(border_cell(X, Y), 3).
-				
-% But we don't want to believe that a cell is safe if it is near a mine and no other information is given about it... so prioritize solutions where we don't assume safety about cells that do not have danger levels near them to indicate that?  
-% Then it becomes an Optimization problem...
-
-%==========================
-% But all revealed cells / danger levels must be consistent at that time step 
-% in order for a set to be included in the answer set...
-
-% Need to tell it to believe or not believe that a cell may be safe...
-
-% :- holds(revealed(X, Y), 3), 
-	% holds(theory_mine_count(X, Y, M), 3),
-	% danger_level(X, Y, D),
-	% holds(border_cell(X1, Y1), 3),
-	% D != M.
-
-% 2 by 1 rule - if there is a 3 x 1 section and a 1 and a 2 next to each other, 
-% the mine goes in the spot on the other side of the 2 than the 1.
-% -holds(safe(X3, Y3), I1) :- limit()
-				% holds(revealed(X1, Y1), I),
-				% holds(revealed(X2, Y1), I),
-				% holds(revealed(X3, Y1), I),
-				% danger_level(X1, Y2, 1),
-				% danger_level(X2, Y2, 2),
-				% diag_neighbor(X1, Y1, X2, Y2),
-				% diag_neighbor(X3, Y3, X2, Y2),
-				% diag_neighbor(X1, Y3, X2, Y2),
-				% diag_neighbor(X3, Y1, X2, Y2),
-				% adj_neighbor(X1, Y1, X2, Y1),
-				% adj_neighbor(X1, Y1, X1, Y2),
-				% adj_neighbor(X3, Y1, X2, Y1),
-				% adj_neighbor(X3, Y1, X3, Y2),
-				% adj_neighbor(X1, Y3, X1, Y2),
-				% adj_neighbor(X1, Y3, X2, Y3),
-				% adj_neighbor(X3, Y3, X2, Y3),
-				% adj_neighbor(X3, Y3, X3, Y2).
-
-% But there needs to be another rule for when there is a 2 x 3 section up against a border...  if that 1 x 3 row or column is either revealed or out of bounds...
-% -holds(safe(X2, Y1), 2) :- danger_level(X1, Y2, 2),
-					% danger_level(X1, Y3, 1),
-					% X1 = 0,
-					% board_size(X, _),
-					
-% build a pattern repeater, to flip and rotate rules?
 
 % ==============================================================
 % Executability Conditions:
@@ -382,8 +336,8 @@ s_maybe_not_safe(X, Y, I) :- -holds(maybe_safe(X, Y), I).
 % ==============================================================
 
 #show safe_move/3.
-#show -safe_move/3.
-#show run_generator/0.
+% #show -safe_move/3.
+% #show run_generator/0.
 #show s_maybe_safe/3.
-#show s_maybe_not_safe/3.
+% #show s_maybe_not_safe/3.
 % #show s_border_cell/3.
