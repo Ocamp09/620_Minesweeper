@@ -247,7 +247,7 @@ holds(safe(X2, Y2), 2) :- in_region(X2, Y2, X1, Y1),
 % be placed in step 3 in region of revealed cells and safe cells will be placed 
 % similarly such that the danger levels on the borders will be satisfed by the 
 % answer set(s).
-run_generator :- not safe_move(_, _, 2).
+run_generator :- not holds(safe(_, _), 2).
 
 %==========================
 % Recursive case rule... try to define possible sets of 
@@ -276,12 +276,15 @@ holds(maybe_safe(X, Y), 3) | -holds(maybe_safe(X, Y), 3) :- run_generator,
 					danger_level(X1, Y1, D),
 					MT + M != D.
 					
-:- danger_level(X, Y, D), holds(theory_mine_count(X, Y, M), 3), M > D.
+:- danger_level(X, Y, D), 
+	holds(theory_mine_count(X, Y, MT), 3), 
+	holds(known_mine_count(X, Y, M), 1),
+	MT + M > D.
 
-% But we don't want to believe that a cell is safe if it is near a mine 
-% and no other information is given about it... so prioritize solutions 
-% where we don't assume safety about cells that do not have danger levels 
-% near them to indicate that?  
+
+
+% Do we want to prioritize solutions where we don't assume safety about cells 
+% that do not have danger levels near them to indicate that?  
 % Then it becomes an optimization problem...
 % Prioritize solutions where we do not assume corner border cells are safe too?
 
@@ -320,24 +323,26 @@ holds(F,I1) :- fluent(inertial,F),
 % ==============================================================
 % Step Info:
 % ==============================================================
-#const n=4. % change the number
+#const n=3. % We use 3 steps for our inference process
 step(0..n).
 next(I, I1) :- step(I), step(I1), I1 = I+1.
 
-safe_move(X, Y, I) :- holds(safe(X, Y), I).
--safe_move(X, Y, I) :- -holds(safe(X, Y), I).
+safe_move(X, Y) :- holds(safe(X, Y), I).
+-safe_move(X, Y) :- -holds(safe(X, Y), I).
 
+maybe_safe(X, Y) :- holds(maybe_safe(X, Y), I).
+-maybe_safe(X, Y) :- -holds(maybe_safe(X, Y), I).
+
+% To see which cells are border cells
 s_border_cell(X, Y, I) :- holds(border_cell(X, Y), I).
-s_maybe_safe(X, Y, I) :- holds(maybe_safe(X, Y), I).
-s_maybe_not_safe(X, Y, I) :- -holds(maybe_safe(X, Y), I).
 
 % ==============================================================
 % Show Directives:
 % ==============================================================
 
-#show safe_move/3.
-% #show -safe_move/3.
+#show safe_move/2.
+% #show -safe_move/2.
+#show maybe_safe/2.
+% #show -maybe_safe/2.
 % #show run_generator/0.
-#show s_maybe_safe/3.
-% #show s_maybe_not_safe/3.
 % #show s_border_cell/3.
