@@ -89,6 +89,11 @@ fluent(defined, unrevealed_count(X, Y, U)) :- cell(X, Y), range(U).
 fluent(defined, safe(X, Y)) :- cell(X, Y).
 
 %==========================
+% maybe_safe(X, Y)
+% a cell which may not have a mine.
+fluent(defined, maybe_safe(X, Y)) :- cell(X, Y).
+
+%==========================
 % border_cell(X, Y)
 % a cell which has unrevealed cells in its region
 fluent(defined, border_cell(X, Y)) :- cell(X, Y).
@@ -105,13 +110,17 @@ holds(known_mine_count(X, Y, M), I) :- cell(X, Y),
 					in_region(X1, Y1, X, Y) },
 					step(I).
 
+holds(theory_mine_count(X, Y, M), I) :- cell(X, Y),
+					range(M),
+					M = #count { X1, Y1 : -holds(maybe_safe(X1, Y1), I), 
+					in_region(X1, Y1, X, Y) },
+					step(I).
 
 holds(unrevealed_count(X, Y, U), I) :- cell(X, Y),
 					range(U),
 					U = #count { X1, Y1 : -holds(revealed(X1, Y1), I), 
 					in_region(X1, Y1, X, Y) },
 					step(I).
-
 
 % ==============================================================
 % Helper Predicates: for easier reuse of common concepts
@@ -218,9 +227,7 @@ holds(safe(X2, Y2), 2) :- in_region(X2, Y2, X1, Y1),
 				danger_level(X1, Y1, D),
 				holds(known_mine_count(X1, Y1, M), 1),
 				D = M,
-				-holds(revealed(X2, Y2), 1).%,
-				%step(I1).
-
+				-holds(revealed(X2, Y2), 1).
 
 %==========================
 % If there is a cell whose danger level is equal to the sum of known mines 
@@ -232,8 +239,7 @@ holds(safe(X2, Y2), 2) :- in_region(X2, Y2, X1, Y1),
 				holds(known_mine_count(X1, Y1, M), 0),
 				holds(unrevealed_count(X1, Y1, U), 0),
 				D = M + U,
-				-holds(revealed(X2, Y2), 0). %,
-				%next(I, I1).
+				-holds(revealed(X2, Y2), 0).
 
 %==========================
 % If there is no reason to believe that any cell is safe, based on basic rules,
@@ -243,16 +249,36 @@ holds(safe(X2, Y2), 2) :- in_region(X2, Y2, X1, Y1),
 % answer set(s).
 run_generator :- not safe_move(_, _, 2).
 
-
+%==========================
 % Recursive case rule... try to define possible sets of 
 % where the mines could be and where the safe cells could be
 
 % Generate either a safe or unsafe label for each cell defined as a border cell
 % as long as run_generator is needed.
-% holds(safe(X, Y), 3) | -holds(safe(X, Y), 3) :- run_generator,
-				% holds(border_cell(X, Y), 3),
-				% .
+holds(maybe_safe(X, Y), 3) | -holds(maybe_safe(X, Y), 3) :- run_generator,
+				holds(border_cell(X, Y), 3).
+				
+% We want to make sure that we do not believe a cell is safe if it is likely to create problems for the danger levels of known/revealed cells
 
+
+% :- not holds(maybe_safe(X, Y), 3), 
+	% not -holds(maybe_safe(X, Y), 3), 
+	% holds(border_cell(X, Y), 3).
+				
+% But we don't want to believe that a cell is safe if it is near a mine and no other information is given about it... so prioritize solutions where we don't assume safety about cells that do not have danger levels near them to indicate that?  
+% Then it becomes an Optimization problem...
+
+%==========================
+% But all revealed cells / danger levels must be consistent at that time step 
+% in order for a set to be included in the answer set...
+
+% Need to tell it to believe or not believe that a cell may be safe...
+
+% :- holds(revealed(X, Y), 3), 
+	% holds(theory_mine_count(X, Y, M), 3),
+	% danger_level(X, Y, D),
+	% holds(border_cell(X1, Y1), 3),
+	% D != M.
 
 % 2 by 1 rule - if there is a 3 x 1 section and a 1 and a 2 next to each other, 
 % the mine goes in the spot on the other side of the 2 than the 1.
@@ -274,7 +300,14 @@ run_generator :- not safe_move(_, _, 2).
 				% adj_neighbor(X1, Y3, X2, Y3),
 				% adj_neighbor(X3, Y3, X2, Y3),
 				% adj_neighbor(X3, Y3, X3, Y2).
-				
+
+% But there needs to be another rule for when there is a 2 x 3 section up against a border...  if that 1 x 3 row or column is either revealed or out of bounds...
+% -holds(safe(X2, Y1), 2) :- danger_level(X1, Y2, 2),
+					% danger_level(X1, Y3, 1),
+					% X1 = 0,
+					% board_size(X, _),
+					
+% build a pattern repeater, to flip and rotate rules?
 
 % ==============================================================
 % Executability Conditions:
@@ -318,6 +351,8 @@ safe_move(X, Y, I) :- holds(safe(X, Y), I).
 -safe_move(X, Y, I) :- -holds(safe(X, Y), I).
 
 s_border_cell(X, Y, I) :- holds(border_cell(X, Y), I).
+s_maybe_safe(X, Y, I) :- holds(maybe_safe(X, Y), I).
+s_maybe_not_safe(X, Y, I) :- -holds(maybe_safe(X, Y), I).
 
 % ==============================================================
 % Show Directives:
@@ -326,4 +361,6 @@ s_border_cell(X, Y, I) :- holds(border_cell(X, Y), I).
 #show safe_move/3.
 #show -safe_move/3.
 #show run_generator/0.
-#show s_border_cell/3.
+#show s_maybe_safe/3.
+#show s_maybe_not_safe/3.
+% #show s_border_cell/3.
