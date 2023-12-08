@@ -88,6 +88,11 @@ fluent(defined, unrevealed_count(X, Y, U)) :- cell(X, Y), range(U).
 % a cell which does not have a mine.
 fluent(defined, safe(X, Y)) :- cell(X, Y).
 
+%==========================
+% border_cell(X, Y)
+% a cell which has unrevealed cells in its region
+fluent(defined, border_cell(X, Y)) :- cell(X, Y).
+
 
 % ==============================================================
 % Positive definition of fluents
@@ -156,6 +161,15 @@ diag_neighbor(X1, Y1, X2, Y2) :- cell(X1, Y1),
 in_region(X1, Y1, X2, Y2) :- diag_neighbor(X1, Y1, X2, Y2).
 in_region(X1, Y1, X2, Y2) :- adj_neighbor(X1, Y1, X2, Y2).
 
+%==========================
+% A cell is considered a border cell if it is not revealed and
+% if it has cells in its region which are revealed.
+holds(border_cell(X, Y), 3) :- cell(X, Y),
+					cell(X1, Y1),
+					in_region(X1, Y1, X, Y),
+					holds(revealed(X1, Y1), 3),
+					not holds(revealed(X, Y), 3).
+
 % ==============================================================
 % Dynamic Causal Laws:
 % ==============================================================
@@ -195,33 +209,50 @@ holds(revealed(X, Y), I) :- -holds(safe(X, Y), I).
 
 
 %==========================
-% If the known mine count of a cell (number of unsafe cells in its region) equals the danger level of that cell, all
-% remaining cells are safe (because a cell cannot have more unsafe cells than its danger level).
-holds(safe(X2, Y2), I1) :- in_region(X2, Y2, X1, Y1),
+% If the known mine count of a cell (number of unsafe cells in its region) 
+% equals the danger level of that cell, all remaining cells are safe 
+% (because a cell cannot have more unsafe cells than its danger level).
+% We use specific time steps here, since this rule only applies before 
+% the generator runs.
+holds(safe(X2, Y2), 2) :- in_region(X2, Y2, X1, Y1),
 				danger_level(X1, Y1, D),
-				holds(known_mine_count(X1, Y1, M), I),
+				holds(known_mine_count(X1, Y1, M), 1),
 				D = M,
-				-holds(revealed(X2, Y2), I),
-				step(I1).
+				-holds(revealed(X2, Y2), 1).%,
+				%step(I1).
 
 
 %==========================
-% If there is a cell whose danger level is equal to the sum of known mines and unrevealed cells, then those unrevealed cells must be mines.
--holds(safe(X2, Y2), I1) :- in_region(X1, Y1, X2, Y2),
+% If there is a cell whose danger level is equal to the sum of known mines 
+% and unrevealed cells, then those unrevealed cells must be mines.
+% We use specific time steps here, since this rule only applies before 
+% the generator runs.
+-holds(safe(X2, Y2), 1) :- in_region(X1, Y1, X2, Y2),
 				danger_level(X1, Y1, D),
-				holds(known_mine_count(X1, Y1, M), I),
-				holds(unrevealed_count(X1, Y1, U), I),
+				holds(known_mine_count(X1, Y1, M), 0),
+				holds(unrevealed_count(X1, Y1, U), 0),
 				D = M + U,
-				-holds(revealed(X2, Y2), I),
-				next(I, I1).
+				-holds(revealed(X2, Y2), 0). %,
+				%next(I, I1).
 
 %==========================
 % If there is no reason to believe that any cell is safe, based on basic rules,
-% A more complex generation is required in steps 3 and 4, in which
-% mines will be placed in step 3 in region of revealed cells 
-% and safe cells will be placed similarly 
-% such that the danger levels on the borders will be satisfed by the answer set(s).
+% A more complex generation is required in steps 3 and 4, in which mines will 
+% be placed in step 3 in region of revealed cells and safe cells will be placed 
+% similarly such that the danger levels on the borders will be satisfed by the 
+% answer set(s).
 run_generator :- not safe_move(_, _, 2).
+
+
+% Recursive case rule... try to define possible sets of 
+% where the mines could be and where the safe cells could be
+
+% Generate either a safe or unsafe label for each cell defined as a border cell
+% as long as run_generator is needed.
+% holds(safe(X, Y), 3) | -holds(safe(X, Y), 3) :- run_generator,
+				% holds(border_cell(X, Y), 3),
+				% .
+
 
 % 2 by 1 rule - if there is a 3 x 1 section and a 1 and a 2 next to each other, 
 % the mine goes in the spot on the other side of the 2 than the 1.
@@ -244,8 +275,6 @@ run_generator :- not safe_move(_, _, 2).
 				% adj_neighbor(X3, Y3, X2, Y3),
 				% adj_neighbor(X3, Y3, X3, Y2).
 				
-% Recursive case rule... try to define possible sets of 
-% where the mines could be and where the safe cells could be
 
 % ==============================================================
 % Executability Conditions:
@@ -281,13 +310,14 @@ holds(F,I1) :- fluent(inertial,F),
 % ==============================================================
 % Step Info:
 % ==============================================================
-#const n=2. % change the number
+#const n=4. % change the number
 step(0..n).
 next(I, I1) :- step(I), step(I1), I1 = I+1.
 
 safe_move(X, Y, I) :- holds(safe(X, Y), I).
 -safe_move(X, Y, I) :- -holds(safe(X, Y), I).
 
+s_border_cell(X, Y, I) :- holds(border_cell(X, Y), I).
 
 % ==============================================================
 % Show Directives:
@@ -296,3 +326,4 @@ safe_move(X, Y, I) :- holds(safe(X, Y), I).
 #show safe_move/3.
 #show -safe_move/3.
 #show run_generator/0.
+#show s_border_cell/3.
