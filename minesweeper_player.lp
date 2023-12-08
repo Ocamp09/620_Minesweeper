@@ -215,6 +215,14 @@ holds(safe(X2, Y2), I1) :- in_region(X2, Y2, X1, Y1),
 				-holds(revealed(X2, Y2), I),
 				next(I, I1).
 
+%==========================
+% If there is no reason to believe that any cell is safe, based on basic rules,
+% A more complex generation is required in steps 3 and 4, in which
+% mines will be placed in step 3 in region of revealed cells 
+% and safe cells will be placed similarly 
+% such that the danger levels on the borders will be satisfed by the answer set(s).
+run_generator :- not safe_move(_, _, 2).
+
 % 2 by 1 rule - if there is a 3 x 1 section and a 1 and a 2 next to each other, 
 % the mine goes in the spot on the other side of the 2 than the 1.
 % -holds(safe(X3, Y3), I1) :- limit()
@@ -287,3 +295,4 @@ safe_move(X, Y, I) :- holds(safe(X, Y), I).
 
 #show safe_move/3.
 #show -safe_move/3.
+#show run_generator/0.
