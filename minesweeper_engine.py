@@ -133,7 +133,7 @@ class MinesweeperGame:
                         file.write("danger_level({0},{1},{2}).\n".format(row, col, self.mine_board[col][row]))
 
         # Create a subprocess object to run the ASP code
-        p = subprocess.Popen(["clingo", player_asp_file, game_asp_file], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+        p = subprocess.Popen(["clingo", "0", player_asp_file, game_asp_file], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
 
         # Receive the output from the ASP code and wait for the subprocess to finish
         asp_response = p.stdout.read().decode("utf-8")
@@ -146,13 +146,35 @@ class MinesweeperGame:
         # First move is the 7th index
         response_arr = response.split(" ")
 
+        if "UNSATISFIABLE" in response:
+            print("No safe move")
+
         # if no move was returned just do a random move
         if "safe_move" not in response_arr[7]:
             x_cord = random.randint(0, self.width - 1)
             y_cord = random.randint(0, self.height - 1)
             return x_cord, y_cord
+
+        # get a list of moves returned
+        moves_arr = []
+        for arr in response_arr:
+            if "safe_move" in arr:
+                moves_arr.append(arr[arr.find("s"):arr.find(")") + 1:])
+
+        print("move", moves_arr)
+
+        move_dict = {}
+        for move in moves_arr:
+            if move not in move_dict:
+                move_dict[move] = 1
+                continue
+            elif move in move_dict:
+                move_dict[move] += 1
+
+        print(move_dict)
+
         # if the 7th index has "safe_move" then assign the move
-        move = response_arr[7]
+        move = moves_arr[0]
         # narrow down just the coordinates
         coord_start = move.find("(") + 1
         coord_end = move.find(")")
@@ -166,8 +188,8 @@ class MinesweeperGame:
     # function to reveal a random cell/cells to give the ASP code a starting point
     def first_move(self):
         # get random x and y coordinates
-        rand_x = random.randint(0, game.width - 1)
-        rand_y = random.randint(0, game.height - 1)
+        rand_x = random.randint(0, self.width - 1)
+        rand_y = random.randint(0, self.height - 1)
 
         # if the coordinates are mines then try again, else reveal the cell
         if self.game_board[rand_y][rand_x] == "mine":
@@ -177,18 +199,18 @@ class MinesweeperGame:
 
 
 # Start the game
-game = MinesweeperGame(5, 5, 3)
+game = MinesweeperGame(5, 5, 10)
 game_over = False
 
-player_asp_file = "minesweeper_player.lp"
+player_asp_file = "minesweeper_nostep.lp"
 
 game.first_move()
 print("Starting board: ")
 game.display_board()
 next_x, next_y = game.write_to_file()
 print(next_x, next_y)
-game_over = game.reveal_cell(int(next_x), int(next_y))
-game.display_board()
+# game_over = game.reveal_cell(int(next_x), int(next_y))
+# game.display_board()
 # # temp variable to stop infinite loops, remove later
 # temp = 0
 # # loop until game is over
