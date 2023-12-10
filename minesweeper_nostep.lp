@@ -1,7 +1,3 @@
-board_size(2,3).
-danger_level(1,1,2).
-
-
 % ++=========================================================================++
 % ||                             BOARD RULES                                 ||
 % ++=========================================================================++
@@ -32,6 +28,12 @@ candidate(X1, Y1) :- cell(X1, Y1),
                      adj(X1, Y1, X2, Y2),
                      revealed(X2, Y2).
                      
+% A wild cell is an unrevealed cell which is not a candidate (IE it is not
+% adjacent to a revealed cell).
+wild(X, Y) :- cell(X, Y),
+              not candidate(X, Y),
+              not revealed(X, Y).
+                     
 % ++=========================================================================++
 % ||                           GENERATION RULES                              ||
 % ++=========================================================================++
@@ -48,8 +50,31 @@ mined(X, Y) | -mined(X, Y) :- candidate(X, Y).
 :- MC = #count{ MCAX, MCAY : adj(MCAX, MCAY, X, Y), mined(MCAX, MCAY) },
    danger_level(X, Y, D),
    MC != D.
+   
+% ++=========================================================================++
+% ||                             OUTPUT RULES                                ||
+% ++=========================================================================++
+
+% A "safe move" is one which is thought to not contain a mine.
+safe_move(X, Y) :- -mined(X, Y).
+
+% Helper flag. It signifies the use of unmined cells as "safe" moves. If at
+% least one unmined cell exists, then only unmined cells will be used as "safe"
+% moves.
+using_unmined_cells :- -mined(_, _).
+
+% If no unmined cells exist, then we say all wild cells are "safe" moves. We
+% don't actually have enough information to predict whether each wild cell is
+% mined or not. However, we know all the candidate cells are mined. So, a cell
+% which may or may not be mined is a safer choice than one which is definitely
+% mined.
+safe_move(X, Y) :- wild(X, Y),
+                   not using_unmined_cells.
+       
                      
 %#show revealed/2.
 %#show candidate/2.
-#show -mined/2.
-#show mined/2.
+%#show -mined/2.
+%#show mined/2.
+#show safe_move/2.
+#show using_unmined_cells/0.
