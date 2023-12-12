@@ -133,20 +133,26 @@ class MinesweeperGame:
                         file.write("danger_level({0},{1},{2}).\n".format(row, col, self.mine_board[col][row]))
 
         # Create a subprocess object to run the ASP code
-        p = subprocess.Popen(["clingo", "0", player_asp_file, game_asp_file], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+        p1 = subprocess.Popen(["clingo", "0", player_asp_file1, game_asp_file], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+        p2 = subprocess.Popen(["clingo", "0", player_asp_file2, game_asp_file], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
 
         # Receive the output from the ASP code and wait for the subprocess to finish
-        asp_response = p.stdout.read().decode("utf-8")
-        p.wait()
+        asp_response1 = p1.stdout.read().decode("utf-8")
+        asp_response2 = p2.stdout.read().decode("utf-8")
 
-        return self.parse_asp(asp_response)
+        p1.wait()
+        p2.wait()
+
+        return self.parse_asp(asp_response1, asp_response2)
 
     # method to take the raw asp response and turn it into the next coordinates to play
-    def parse_asp(self, response):
+    def parse_asp(self, response, response2):
+        print(response2)
         # First move is the 7th index
         response_arr = response.split(" ")
-
-        if "UNSATISFIABLE" in response:
+        response2_arr = response2.split(" ")
+        print(response2_arr)
+        if "UNSATISFIABLE" in response and "UNSATISFIABLE" in response2:
             print("No safe move")
 
         # if no move was returned just do a random move
@@ -161,7 +167,13 @@ class MinesweeperGame:
             if "safe_move" in arr:
                 moves_arr.append(arr[arr.find("s"):arr.find(")") + 1:])
 
-        print("move", moves_arr)
+        moves2_arr = []
+        for arr in response2_arr:
+            if "maybe_safe" in arr:
+                moves2_arr.append(arr[arr.find("m"):arr.find(")") + 1:])
+
+        # print("move", moves_arr)
+        print("move2", moves2_arr)
 
         move_dict = {}
         for move in moves_arr:
@@ -171,7 +183,7 @@ class MinesweeperGame:
             elif move in move_dict:
                 move_dict[move] += 1
 
-        print(move_dict)
+        # print(move_dict)
 
         # if the 7th index has "safe_move" then assign the move
         move = moves_arr[0]
@@ -187,22 +199,28 @@ class MinesweeperGame:
 
     # function to reveal a random cell/cells to give the ASP code a starting point
     def first_move(self):
-        # get random x and y coordinates
-        rand_x = random.randint(0, self.width - 1)
-        rand_y = random.randint(0, self.height - 1)
+        empty_cell = False
+        for row in range(self.width):
+            if empty_cell:
+                break
+            for col in range(self.height):
+                if empty_cell:
+                    break
+                elif self.mine_board[row][col] == 0:
+                    empty_cell = True
+                    self.reveal_cell(col, row)
 
-        # if the coordinates are mines then try again, else reveal the cell
-        if self.game_board[rand_y][rand_x] == "mine":
-            self.first_move()
-        else:
-            self.reveal_cell(rand_x, rand_y)
+
+        # make a new game
+        # if not empty_cell:
 
 
 # Start the game
-game = MinesweeperGame(5, 5, 10)
+game = MinesweeperGame(10, 10, 20)
 game_over = False
 
-player_asp_file = "minesweeper_nostep.lp"
+player_asp_file1 = "minesweeper_nostep.lp"
+player_asp_file2 = "minesweeper_player.lp"
 
 game.first_move()
 print("Starting board: ")
