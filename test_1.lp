@@ -15,9 +15,9 @@ board_size(3, 3).
 % Game Board Facts: what is known about the state of the game
 % ==============================================================
 
-danger_level(0, 0, 0).
-danger_level(1, 0, 0).
-danger_level(2, 0, 0).
-danger_level(0, 1, 1).
-danger_level(1, 1, 2).
-danger_level(2, 1, 1).
+danger_level(1, 1, 0).
+danger_level(2, 1, 0).
+danger_level(3, 1, 0).
+danger_level(1, 2, 1).
+danger_level(2, 2, 2).
+danger_level(3, 2, 1).
