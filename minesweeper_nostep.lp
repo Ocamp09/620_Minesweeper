@@ -1,4 +1,51 @@
 % ++=========================================================================++
+% ||                          PROJECT INFORMATION                            ||
+% ++=========================================================================++
+% 
+% --- Title -------------------------------------------------------------------
+%
+% A-Swee-Per: An ASP-based Approach to Playing Minesweeper
+%
+%
+% --- Input Predicates --------------------------------------------------------
+% 
+% danger_level(X, Y, D).
+%   The danger level, D, of the cell at position X, Y. D is equal to the number
+%   of mined cells which are adjacent to the cell at position X, Y. If a cell
+%   has a danger level, it is implicitly assumed to be revealed (because a
+%   revealed cell must have danger level).
+%
+% board_size(X, Y).
+%   Defines the size of the game board. The board has 1..X rows and 1..Y
+%   columns.
+%
+%
+% --- Output Predicates -------------------------------------------------------
+%
+% safe_move(X, Y).
+%   Says that the cell at position X, Y is safe to reveal in the current
+%   answer set. This occurs when a candidate cell is marked as unmined.
+%   If the using_unmined_cells predicate is not set, then safe_move
+%   says the cell at X, Y has an unknown mine status, but it is safer than
+%   all candidate cells (because using_unmined_cells only occurs when all
+%   candidate cells are mined).
+%
+% using_unmined_cells.
+%   Occurs when at least one unmined candidate cell exists. This predicate
+%   signifies that all safe_move positions are part of the set of candidate
+%   cells.
+%
+%
+% --- Knowledge Representation and Reasoing Methodology -----------------------
+%
+% This program uses the generate-test methodology. It generates all possible
+% combinations of mined and unmined candidate cells. Then, it discards all
+% illegal combinations of mined and unmined candidate cells.
+
+
+
+
+% ++=========================================================================++
 % ||                             BOARD RULES                                 ||
 % ++=========================================================================++
 
