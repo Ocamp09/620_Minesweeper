@@ -4,16 +4,17 @@ import random
 
 # This class is a game engine for minesweeper that will be played by an ASP agent
 class MinesweeperGame:
-    # generate a game board from a given width, height, and number of mines. Mines are placed randomly, and there is a
-    # board with the mines and the count of cells with neigboring mines, as well as a blank game board
+    # generate a game board from a given width, height, and number of mines. 
+    # Mines are placed randomly, and there is a board with the mines and 
+    # the count of cells with neigboring mines, as well as a blank game board
     def __init__(self, width=5, height=5, num_mines=5):
         # set the height, width and number of mines for the game
         self.width = width
         self.height = height
         self.num_mines = num_mines
 
-        # Create the game board with a board that holds the mines and neighboring mine counts, and a game board to be
-        # utilized by the ASP agent
+        # Create the game board with a board that holds the mines and neighboring mine counts, 
+        # and a game board to be utilized by the ASP agent
         self.mine_board = [[None for i in range(width)] for j in range(height)]
         self.game_board = [[" " for i in range(width)] for j in range(height)]
 
@@ -91,8 +92,8 @@ class MinesweeperGame:
                         # if the neighboring coordinates are within the game board
                         if 0 <= x_cord < self.width and 0 <= y_cord < self.height:
                             # if the cell is already revealed skip, else if the cell has no neighboring mines
-                            # make the recursive call to reveal neighboring zero cells, else reveal the first layer
-                            # touching the zero cells
+                            # make the recursive call to reveal neighboring zero cells, else reveal the first 
+                            # layer touching the zero cells
                             if self.game_board[y_cord][x_cord] != " ":
                                 continue
                             elif self.mine_board[y_cord][x_cord] == 0:
@@ -107,7 +108,8 @@ class MinesweeperGame:
 
         return False
 
-    # function evaluates if all the cells in game board are either not empty, or not mines, signifying the game is over
+    # function evaluates if all the cells in game board are either not empty 
+    # or not mines, signifying the game is over
     def is_game_won(self):
         # loop through the game/mine board
         for row in range(self.width):
@@ -148,18 +150,45 @@ class MinesweeperGame:
     # method to take the raw asp response and turn it into the next coordinates to play
     def parse_asp(self, response, response2):
         print(response2)
-        # First move is the 7th index
-        response_arr = response.split(" ")
-        response2_arr = response2.split(" ")
+        response_arr = response.replace("\r\n", " ").split(" ")
+        response2_arr = response2.replace("\r\n", " ").split(" ")
+        print("Response 1:")
+        print(response_arr)
+        print("Response 2:")
         print(response2_arr)
+        
+        # negotiation process
+        # 1) look for guaranteed safe moves from basic rules in player
+        # 2) if the number of returned models is = 1 from nostep, all of those moves are guaranteed safe
+        # 3) if the number of returned models is = 1 from player, those moves are considered safe (but redundant)
+        # 4) if the number of models is multiple, then any of those returned moves have no reason to believe they are unsafe
+        
+        # get the safe_moves as an array and the maybe_safe as an array
+        known_safe = []  # from player version basic rules, guaranteed safety
+        likely_safe = []  # from nostep version, more expansive, probably safe, known safe if only one model returned
+        likely_safe2 = []  # from player version, probably safe, known safe if only one model returned
+        
+        for str in response_arr:
+            if "safe_move" in str :
+                known_safe.append(str)
+                # add pairs of coordinates so can be integrated with other files 
+        
+        print("Known safe:")
+        print(known_safe)
+        
+        # If number of models returned for the files is 1, they can be considered safe moves as well
+        
+        
+        
+        # Should never be unsatisfiable, assuming our encodings are correct.
         if "UNSATISFIABLE" in response and "UNSATISFIABLE" in response2:
-            print("No safe move")
+            print("Error with game board")
 
         # if no move was returned just do a random move
-        if "safe_move" not in response_arr[7]:
-            x_cord = random.randint(0, self.width - 1)
-            y_cord = random.randint(0, self.height - 1)
-            return x_cord, y_cord
+        # if "safe_move" not in response_arr[7]:
+            # x_cord = random.randint(0, self.width - 1)
+            # y_cord = random.randint(0, self.height - 1)
+            # return x_cord, y_cord
 
         # get a list of moves returned
         moves_arr = []
@@ -219,8 +248,8 @@ class MinesweeperGame:
 game = MinesweeperGame(10, 10, 20)
 game_over = False
 
-player_asp_file1 = "minesweeper_nostep.lp"
-player_asp_file2 = "minesweeper_player.lp"
+player_asp_file1 = "minesweeper_player.lp"
+player_asp_file2 = "minesweeper_nostep.lp"
 
 game.first_move()
 print("Starting board: ")
