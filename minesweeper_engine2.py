@@ -88,7 +88,7 @@ class MinesweeperGame:
     def display_both_boards(self):
         # Print each row of the board.
         print("ASP Agent's Knowledge:", end="")
-        print(" " * (self.width - 5), end="")
+        print(" " * (self.width * 2 - 15), end="")
         print("Game Engine's Knowledge:")
         for i in range(0, len(self.game_board)):
             grow = self.game_board[i]
@@ -119,7 +119,9 @@ class MinesweeperGame:
     def reveal_cell(self, x, y, recursive=False):
         # if the cell revealed is a mine, then the game is lost
         if self.mine_board[y][x] == "mine":
-            print("Game lost")
+            print("---------------")
+            print("|  Game lost  |")
+            print("---------------")
             return True
         # if the current cell is already empty print a message
         elif self.game_board[y][x] != " " and not recursive:
@@ -152,7 +154,9 @@ class MinesweeperGame:
 
         # if the game is won then print a message and stop the while loop with a true return
         if self.is_game_won():
-            print("Game won")
+            print("--------------")
+            print("|  Game won  |")
+            print("--------------")
             return True
 
         return False
@@ -166,7 +170,6 @@ class MinesweeperGame:
                 # If there is an empty space that is not a mine, the game is not won
                 if not self.mine_board[col][row] == "mine" and self.game_board[col][row] == " ":
                     return False
-
         return True
 
     # write the danger levels to an ASP file and run the agent ASP files
@@ -207,8 +210,7 @@ class MinesweeperGame:
     def parse_asp(self, response):
         print(response)
         response_arr = self.clean_resp(response).split(" ")
-        
-        
+
         if args.player:
             # negotiation process
             # 1) look for guaranteed safe moves from basic rules in player
@@ -217,8 +219,10 @@ class MinesweeperGame:
             # 4) if the number of models is multiple, then any of those returned moves have no reason to believe they are unsafe
             # But it is still good to choose one which has more explanations in which it is considered safe.
             
-            known_safe = []  # guaranteed safe moves
-            maybe_safe = []  # these moves are not guaranteed
+            # Define lists for guaranteed safe moves and likely safe moves
+            known_safe = []
+            maybe_safe = []
+            
             # include sets for display and traversal for counting occurences
             known_safe_set = []
             maybe_safe_set = []
@@ -233,12 +237,16 @@ class MinesweeperGame:
                     coords = str.split(",")   # get array from remaining string
                     coords = [int(coord) for coord in coords]   # convert to int data type
                     known_safe.append(coords)
+                    # Can optionally just return the coords as soon as know that they are good
+                    # return coords[0] - 1, coords[1] - 1
                     if not coords in known_safe_set:
                         known_safe_set.append(coords)
                 elif "maybe_safe" in str and model_count == 1:
                     str = str.replace("maybe_safe(", "").replace(")", "")   # trim unnecessary bits
                     coords = str.split(",")   # get array from remaining string
                     coords = [int(coord) for coord in coords]   # convert to int data type
+                    # Can optionally just return the coords as soon as know that they are good
+                    # return coords[0] - 1, coords[1] - 1
                     known_safe.append(coords)
                     if not coords in known_safe_set:
                         known_safe_set.append(coords)
@@ -372,23 +380,35 @@ class MinesweeperGame:
                     self.reveal_cell(col, row)
 
 
-        # make a new game
-        # if not empty_cell:
-
-
-
-# Start the game
-game = MinesweeperGame(10, 10, 20)
-game_over = False
-
-player_asp_file1 = "minesweeper_player.lp"
-player_asp_file2 = "minesweeper_nostep.lp"
-
+# Add argument parsing functionality
 parser = argparse.ArgumentParser(description='A script with a boolean command line flag.')
 parser.add_argument('--nostep', action='store_true', help='Use nostep ASP implementation')
 parser.add_argument('--player', action='store_true', help='Use player ASP implementation')
+parser.add_argument('--mines',  type=int, help='The number of mines present in the game')
+parser.add_argument('--x',  type=int, help='The horizontal dimension of the grid')
+parser.add_argument('--y',  type=int, help='The vertical dimension of the grid')
 args = parser.parse_args()
 
+x_dim = 10
+y_dim = 10
+mines = 20
+
+if args.mines is not None:
+    mines = args.mines
+if args.x is not None:
+    x_dim = args.x
+if args.y is not None:
+    y_dim = args.y
+
+# Start the game
+game = MinesweeperGame(x_dim, y_dim, mines)
+game_over = False
+
+# Define files for ASP Agents
+player_asp_file1 = "minesweeper_player.lp"
+player_asp_file2 = "minesweeper_nostep.lp"
+
+# Print which solver is being used
 if args.nostep:
     print("\nUsing nostep ASP solver...\n")
 if args.player:
@@ -399,14 +419,7 @@ game.first_move()
 
 # Display both boards side by side
 game.display_both_boards()
-next_x, next_y = game.write_to_file()
 
-# print(next_x, next_y)
-game_over = game.reveal_cell(int(next_x), int(next_y))
-game.display_both_boards()
-# game.display_board()
-# # temp variable to stop infinite loops, remove later
-temp = 0
 # loop until game is over
 while not game_over:
     # send game board to ASP and get response in return
@@ -419,4 +432,4 @@ while not game_over:
     game.display_both_boards()
     
     # increment temp
-    temp = temp + 1
+    # temp = temp + 1
