@@ -31,7 +31,7 @@
 % ===================================================================
 % Methodology:
 % ===================================================================
-% This ASP program uses the dynamic domain methodology to come up with the safest move
+% This ASP program uses a combination of dynamic domain and generate-test methodology to come up with the safest move
 % for the python engine to create
 
 
