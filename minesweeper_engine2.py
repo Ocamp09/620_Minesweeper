@@ -298,10 +298,63 @@ class MinesweeperGame:
             
             print("\nSelected Coordinates:")
             print(x_cord, ", ", y_cord, sep="")
-        
-        
+
         if args.nostep:
-            print("")
+            model_count = int(response_arr[response_arr.index("Models") + 2])
+            
+            # Define a dictionary to keep track of counts of coords
+            counts = {}
+        
+            safe_moves_set = []
+            safe_moves = []
+            # take the intersection of sets...
+            for str in response_arr:
+                if "safe_move" in str:
+                    str = str.replace("safe_move(", "").replace(")", "")   # trim unnecessary bits
+                    coords = str.split(",")   # get array from remaining string
+                    coords = [int(coord) for coord in coords]   # convert to int data type
+                    safe_moves.append(coords)
+                    if not coords in safe_moves_set:
+                        safe_moves_set.append(coords)
+
+            # if a set of coords is in all returned answer sets, it must be guaranteed safe.
+            i = 0
+            while i < len(safe_moves_set):
+                item = safe_moves_set[i]
+                item_count = safe_moves.count(item)
+                if item_count in counts:
+                    tmp_list = counts[item_count]
+                    tmp_list.append(item)
+                    counts[item_count] = tmp_list
+                else:
+                    tmp_list = []
+                    tmp_list.append(item)
+                    counts[item_count] = tmp_list
+                i = i + 1
+            
+            # prioritize the maybe_safe coords with higher number of occurences, Order the items in terms of counts
+            sorted_counts_list = sorted(counts.keys(), reverse=True)
+            sorted_safe = []
+            for i in range(0, len(sorted_counts_list)):
+                # get the map entry and add all items in the entry to the list...
+                tmp_list = counts[sorted_counts_list[i]]
+                for j in range(0, len(tmp_list)):
+                    sorted_safe.append(tmp_list[j])
+            safe_moves_set = sorted_safe
+            
+            # Should never be unsatisfiable, assuming our encodings are correct.
+            if "UNSATISFIABLE" in response and "UNSATISFIABLE" in response2:
+                print("Agent could not deduce any possible safe moves.")
+
+            x_cord = safe_moves_set[0][0]
+            y_cord = safe_moves_set[0][1]
+            
+            # Print the moves in order of safety
+            print("Safe Moves Prioritized Order:")
+            print(safe_moves_set)
+            
+            print("\nSelected Coordinates:")
+            print(x_cord, ", ", y_cord, sep="")
         
         return x_cord - 1, y_cord - 1
 
